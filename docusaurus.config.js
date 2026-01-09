@@ -23,6 +23,12 @@ const config = {
 
   onBrokenLinks: 'warn',
 
+  // Enable Mermaid diagrams
+  markdown: {
+    mermaid: true,
+  },
+  themes: ['@docusaurus/theme-mermaid'],
+
   i18n: {
     defaultLocale: 'id',
     locales: ['id'],
@@ -117,6 +123,9 @@ const config = {
         theme: prismThemes.github,
         darkTheme: prismThemes.dracula,
         additionalLanguages: ['php', 'bash'],
+      },
+      mermaid: {
+        theme: { light: 'neutral', dark: 'dark' },
       },
     }),
 };
