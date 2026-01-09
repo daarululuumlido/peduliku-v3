@@ -11,16 +11,17 @@ const config = {
     v4: true,
   },
 
-  // Ganti dengan URL deployment kamu nanti
-  url: 'https://peduliku-docs.example.com',
-  baseUrl: '/',
+  // GitHub Pages URL
+  url: 'https://daarululuumlido.github.io',
+  baseUrl: '/peduliku-v3/',
+  trailingSlash: false,
 
   // GitHub pages deployment config
-  organizationName: 'daarululuumlido', // Ganti dengan GitHub org/user name
-  projectName: 'peduliku-v3', // Ganti dengan repo name
+  organizationName: 'daarululuumlido',
+  projectName: 'peduliku-v3',
+  deploymentBranch: 'gh-pages',
 
   onBrokenLinks: 'warn',
-  onBrokenMarkdownLinks: 'warn',
 
   i18n: {
     defaultLocale: 'id',
