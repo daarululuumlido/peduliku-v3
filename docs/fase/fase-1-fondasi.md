@@ -85,9 +85,13 @@ erDiagram
         uuid id PK
         string nik UK
         string nama
+        string gelar_depan "Kyai., H., Drs., dll"
+        string gelar_belakang "S.Pd., M.Pd., Lc., dll"
         enum gender
         date tanggal_lahir
         string tempat_lahir
+        string nama_ibu_kandung
+        string no_whatsapp
         uuid alamat_ktp_id FK "Alamat sesuai KTP"
         uuid kartu_keluarga_id FK
         timestamp deleted_at
