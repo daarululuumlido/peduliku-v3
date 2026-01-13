@@ -73,6 +73,14 @@ erDiagram
         string guard_name
     }
     
+    ALAMAT {
+        uuid id PK
+        uuid desa_id FK "FK ke indonesia_villages"
+        text alamat_lengkap "RT/RW, jalan, detail"
+        timestamp created_at
+        timestamp updated_at
+    }
+    
     ORANG {
         uuid id PK
         string nik UK
@@ -80,7 +88,7 @@ erDiagram
         enum gender
         date tanggal_lahir
         string tempat_lahir
-        uuid desa_id FK
+        uuid alamat_ktp_id FK "Alamat sesuai KTP"
         uuid kartu_keluarga_id FK
         timestamp deleted_at
     }
@@ -89,7 +97,7 @@ erDiagram
         uuid id PK
         string no_kk UK
         uuid kepala_keluarga_id FK
-        uuid desa_id FK
+        uuid alamat_id FK "Alamat KK"
     }
     
     LAMPIRAN_DOKUMEN {
@@ -102,9 +110,12 @@ erDiagram
         bigint size
     }
     
-    USERS ||--o{ ROLES : "has"
+    ALAMAT }o--|| INDONESIA_VILLAGES : "references"
+    ORANG }o--|| ALAMAT : "alamat KTP"
     ORANG }o--|| KARTU_KELUARGA : "belongs to"
+    KARTU_KELUARGA }o--|| ALAMAT : "alamat KK"
     ORANG ||--o{ LAMPIRAN_DOKUMEN : "has"
+    USERS ||--o{ ROLES : "has"
 ```
 
 ---

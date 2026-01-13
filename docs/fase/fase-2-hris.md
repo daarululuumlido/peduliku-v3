@@ -41,7 +41,7 @@ Mengaktifkan peran pegawai pada data orang yang sudah ada.
 
 | Tabel | Kolom | Fungsi |
 |-------|-------|--------|
-| `peran_pegawai` | `id`, `orang_id` (FK ke Fase 1), `nip`, `tgl_bergabung`, `status_kepegawaian` (Tetap/Kontrak/Honorer), `is_active` | Menyimpan data kepegawaian |
+| `peran_pegawai` | `id`, `orang_id` (FK ke Fase 1), `nip`, `tgl_bergabung`, `status_kepegawaian` (Tetap/Kontrak/Honorer), `alamat_domisili_id` (FK ke tabel `alamat`), `is_active` | Menyimpan data kepegawaian. Alamat domisili wajib diisi, bisa sama dengan alamat KTP pada tabel orang |
 | `histori_jabatan_pegawai` | `id`, `peran_pegawai_id`, `master_jabatan_id` (FK), `no_sk`, `tgl_mulai`, `tgl_selesai`, `keterangan_mutasi` | Mencatat perjalanan karir (Mutasi, Promosi, Demosi) |
 
 ### B. Kebutuhan Fungsional (Fitur)
