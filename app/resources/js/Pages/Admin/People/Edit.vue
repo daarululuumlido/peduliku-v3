@@ -2,6 +2,7 @@
 import ModuleLayout from '@/Layouts/ModuleLayout.vue';
 import AddressSelector from '@/Components/AddressSelector.vue';
 import AddressSearchSelect from '@/Components/AddressSearchSelect.vue';
+import KKSearchSelect from '@/Components/KKSearchSelect.vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
@@ -9,12 +10,8 @@ const props = defineProps({
     orang: Object,
 });
 
-// Default to existing address mode if ID exists, or if no address data at all.
-// Only default to new address mode if explicitly creating one? 
-// Logic: If user has an address (ID), show it in search mode.
-// If user has address data but no ID (legacy?), maybe show new address mode? 
-// For now, assume most have ID.
 const useNewAddress = ref(false);
+const useNewKK = ref(false);
 
 const form = useForm({
     _method: 'PUT',
@@ -25,9 +22,11 @@ const form = useForm({
     tempat_lahir: props.orang.tempat_lahir,
     nama_ibu_kandung: props.orang.nama_ibu_kandung || '',
     no_whatsapp: props.orang.no_whatsapp || '',
-    alamat_lengkap: '', // we clean this up since we toggle
-    desa_id: '',        // we clean this up since we toggle
+    alamat_lengkap: '',
+    desa_id: '',
     alamat_id: props.orang.alamat_ktp_id || '',
+    kartu_keluarga_id: props.orang.kartu_keluarga_id || '',
+    new_no_kk: '',
     dokumen: [],
 });
 
@@ -45,6 +44,15 @@ const toggleAddressMode = () => {
         // Switching to Search: Clear new address fields
         form.alamat_lengkap = '';
         form.desa_id = '';
+    }
+};
+
+const toggleKKMode = () => {
+    useNewKK.value = !useNewKK.value;
+    if (useNewKK.value) {
+        form.kartu_keluarga_id = '';
+    } else {
+        form.new_no_kk = '';
     }
 };
 
@@ -198,6 +206,48 @@ const submit = () => {
                                     placeholder="08xxxxxxxxxx"
                                     class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                                 />
+                            </div>
+                        </div>
+
+                        <!-- Kartu Keluarga Section -->
+                        <div class="border-t pt-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-medium text-gray-900">Kartu Keluarga (Opsional)</h3>
+                                <button
+                                    type="button"
+                                    @click="toggleKKMode"
+                                    class="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                                >
+                                    {{ useNewKK ? 'Cari KK yang Sudah Ada' : 'Buat KK Baru (Draft)' }}
+                                </button>
+                            </div>
+
+                            <div v-if="!useNewKK" class="space-y-4">
+                                <KKSearchSelect
+                                    v-model="form.kartu_keluarga_id"
+                                    :initial-label="props.orang.kartu_keluarga ? props.orang.kartu_keluarga.no_kk : ''"
+                                    :error="form.errors.kartu_keluarga_id"
+                                />
+                            </div>
+
+                            <div v-else class="space-y-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        Nomor Kartu Keluarga Baru
+                                    </label>
+                                    <input
+                                        type="text"
+                                        v-model="form.new_no_kk"
+                                        maxlength="16"
+                                        placeholder="16 digit nomor KK baru"
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 font-mono"
+                                        :class="{ 'border-red-500': form.errors.new_no_kk }"
+                                    />
+                                    <p class="mt-1 text-xs text-gray-500">KK baru akan dibuat dengan alamat yang sama dengan orang ini.</p>
+                                    <p v-if="form.errors.new_no_kk" class="mt-1 text-sm text-red-600">
+                                        {{ form.errors.new_no_kk }}
+                                    </p>
+                                </div>
                             </div>
                         </div>
 

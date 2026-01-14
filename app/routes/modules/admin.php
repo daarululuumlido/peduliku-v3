@@ -29,6 +29,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'module:admin'])->gr
     Route::resource('alamat', \App\Http\Controllers\AlamatController::class);
 
     // Kartu Keluarga Routes
+    Route::get('kartu-keluarga/search', [KartuKeluargaController::class, 'search'])->name('kartu-keluarga.search');
     Route::post('/kartu-keluarga/{kartuKeluarga}/add-member', [KartuKeluargaController::class, 'addMember'])->name('kartu-keluarga.add-member');
     Route::post('/kartu-keluarga/{kartuKeluarga}/remove-member', [KartuKeluargaController::class, 'removeMember'])->name('kartu-keluarga.remove-member');
     Route::resource('kartu-keluarga', KartuKeluargaController::class);

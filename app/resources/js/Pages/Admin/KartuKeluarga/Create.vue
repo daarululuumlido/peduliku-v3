@@ -1,13 +1,27 @@
 <script setup>
 import ModuleLayout from '@/Layouts/ModuleLayout.vue';
-import AddressSelector from '@/Components/AddressSelector.vue';
+import AddressSearchSelect from '@/Components/AddressSearchSelect.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { ref } from 'vue';
+
+const useNewAddress = ref(false);
 
 const form = useForm({
     no_kk: '',
     alamat_lengkap: '',
     desa_id: '',
+    alamat_id: '',
 });
+
+const toggleAddressMode = () => {
+    useNewAddress.value = !useNewAddress.value;
+    if (useNewAddress.value) {
+        form.alamat_id = '';
+    } else {
+        form.desa_id = '';
+        form.alamat_lengkap = '';
+    }
+};
 
 const submit = () => {
     form.post(route('admin.kartu-keluarga.store'));
@@ -54,12 +68,35 @@ const submit = () => {
                             </p>
                         </div>
 
-                        <!-- Address Selector -->
-                        <AddressSelector
-                            v-model:desa-id="form.desa_id"
-                            v-model:alamat-lengkap="form.alamat_lengkap"
-                            :error="form.errors.desa_id"
-                        />
+                        <!-- Address Section -->
+                        <div class="border-t pt-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-medium text-gray-900">Alamat Kartu Keluarga</h3>
+                                <button
+                                    type="button"
+                                    @click="toggleAddressMode"
+                                    class="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                                >
+                                    {{ useNewAddress ? 'Cari Alamat yang Sudah Ada' : 'Buat Alamat Baru' }}
+                                </button>
+                            </div>
+
+                            <div v-if="!useNewAddress" class="space-y-4">
+                                <AddressSearchSelect
+                                    v-model="form.alamat_id"
+                                    :error="form.errors.alamat_id"
+                                />
+                                <input type="hidden" v-model="form.alamat_id">
+                            </div>
+
+                            <div v-else class="space-y-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                <AddressSelector
+                                    v-model:desa-id="form.desa_id"
+                                    v-model:alamat-lengkap="form.alamat_lengkap"
+                                    :error="form.errors.desa_id"
+                                />
+                            </div>
+                        </div>
 
                         <!-- Submit Button -->
                         <div class="flex justify-end gap-4 pt-6 border-t">

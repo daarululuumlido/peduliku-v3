@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Alamat;
+use App\Models\KartuKeluarga;
 use App\Models\Orang;
 use App\Services\DocumentService;
 use Illuminate\Http\Request;
@@ -69,6 +70,8 @@ class OrangController extends Controller
             'alamat_id' => ['nullable', 'exists:alamat,id'],
             'alamat_lengkap' => ['nullable', 'required_without:alamat_id', 'string'],
             'desa_id' => ['nullable', 'required_without:alamat_id', 'string', 'exists:indonesia_villages,code'],
+            'kartu_keluarga_id' => ['nullable', 'exists:kartu_keluarga,id'],
+            'new_no_kk' => ['nullable', 'string', 'size:16', 'unique:kartu_keluarga,no_kk'],
             'dokumen.*' => ['nullable', 'file', 'max:10240'], // Max 10MB per file
         ]);
 
@@ -84,6 +87,16 @@ class OrangController extends Controller
             $alamatId = $alamat->id;
         }
 
+        // Handle Kartu Keluarga
+        $kkId = $validated['kartu_keluarga_id'] ?? null;
+        if (!$kkId && !empty($validated['new_no_kk'])) {
+            $kk = KartuKeluarga::create([
+                'no_kk' => $validated['new_no_kk'],
+                'alamat_id' => $alamatId, // Default new KK address to person's address
+            ]);
+            $kkId = $kk->id;
+        }
+
         // Create orang
         $orang = Orang::create([
             'nik' => $validated['nik'],
@@ -94,6 +107,7 @@ class OrangController extends Controller
             'nama_ibu_kandung' => $validated['nama_ibu_kandung'] ?? null,
             'no_whatsapp' => $validated['no_whatsapp'] ?? null,
             'alamat_ktp_id' => $alamatId,
+            'kartu_keluarga_id' => $kkId,
         ]);
 
         // Handle document uploads
@@ -124,7 +138,7 @@ class OrangController extends Controller
      */
     public function edit(Orang $orang): Response
     {
-        $orang->load(['alamatKtp.desa.district.city.province']);
+        $orang->load(['alamatKtp.desa.district.city.province', 'kartuKeluarga']);
 
         return Inertia::render('Admin/People/Edit', [
             'orang' => $orang,
@@ -147,6 +161,8 @@ class OrangController extends Controller
             'alamat_id' => ['nullable', 'exists:alamat,id'],
             'alamat_lengkap' => ['nullable', 'required_without:alamat_id', 'string'],
             'desa_id' => ['nullable', 'required_without:alamat_id', 'string', 'exists:indonesia_villages,code'],
+            'kartu_keluarga_id' => ['nullable', 'exists:kartu_keluarga,id'],
+            'new_no_kk' => ['nullable', 'string', 'size:16', 'unique:kartu_keluarga,no_kk'],
             'dokumen.*' => ['nullable', 'file', 'max:10240'], // Max 10MB per file
         ]);
 
@@ -155,26 +171,26 @@ class OrangController extends Controller
             // User selected an existing address
             $orang->alamat_ktp_id = $validated['alamat_id'];
         } elseif ($validated['desa_id'] || $validated['alamat_lengkap']) {
-            // User entered new address details
-            // Always create new if explicitly inputting details (assuming intent is to use specific new details)
-            // Or update existing if linked?
-            // "Buat Alamat Baru" implies creating new.
-            // If user was editing an existing linked address, they should edit that address directly or create new.
-            // Let's create new to be safe and avoid mutating shared addresses inadvertently,
-            // unless we want to "Edit current address".
-            // Given the requirement "cari alamat dan bila tidak ada ada tombol buat alamat baru",
-            // it implies switching to a new address.
-
             $alamat = Alamat::create([
                 'desa_id' => $validated['desa_id'] ?? null,
                 'alamat_lengkap' => $validated['alamat_lengkap'] ?? null,
             ]);
             $orang->alamat_ktp_id = $alamat->id;
         }
-        // If neither, keep existing or handle removal?
-        // For now, if fields are empty and no alamat_id, it might mean keeping current or clearing.
-        // But validation `required_without:alamat_id` enforces at least one path if we strictly follow it.
-        // However, since they are nullable, let's just save.
+
+        // Handle KK update
+        if (isset($validated['kartu_keluarga_id']) && $validated['kartu_keluarga_id']) {
+            $orang->kartu_keluarga_id = $validated['kartu_keluarga_id'];
+        } elseif (!empty($validated['new_no_kk'])) {
+            $kk = KartuKeluarga::create([
+                'no_kk' => $validated['new_no_kk'],
+                'alamat_id' => $orang->alamat_ktp_id, // Default to person's address
+            ]);
+            $orang->kartu_keluarga_id = $kk->id;
+        } elseif (array_key_exists('kartu_keluarga_id', $validated) && $validated['kartu_keluarga_id'] === null) {
+             // If expressly sent as null, clear it
+             $orang->kartu_keluarga_id = null;
+        }
 
         $orang->update([
             'nik' => $validated['nik'],
@@ -184,6 +200,8 @@ class OrangController extends Controller
             'tempat_lahir' => $validated['tempat_lahir'],
             'nama_ibu_kandung' => $validated['nama_ibu_kandung'] ?? null,
             'no_whatsapp' => $validated['no_whatsapp'] ?? null,
+            'alamat_ktp_id' => $orang->alamat_ktp_id,
+            'kartu_keluarga_id' => $orang->kartu_keluarga_id,
         ]);
 
         // Handle document uploads

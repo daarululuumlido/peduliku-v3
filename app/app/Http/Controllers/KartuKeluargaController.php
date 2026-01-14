@@ -48,13 +48,16 @@ class KartuKeluargaController extends Controller
     {
         $validated = $request->validate([
             'no_kk' => ['required', 'string', 'size:16', 'unique:kartu_keluarga,no_kk'],
-            'alamat_lengkap' => ['nullable', 'string'],
-            'desa_id' => ['nullable', 'string', 'exists:indonesia_villages,code'],
+            'alamat_id' => ['nullable', 'exists:alamat,id'],
+            'alamat_lengkap' => ['nullable', 'required_without:alamat_id', 'string'],
+            'desa_id' => ['nullable', 'required_without:alamat_id', 'string', 'exists:indonesia_villages,code'],
         ]);
 
-        // Create alamat if provided
-        $alamatId = null;
-        if ($validated['desa_id'] || $validated['alamat_lengkap']) {
+        // Determine alamat_id
+        $alamatId = $validated['alamat_id'] ?? null;
+
+        // If no existing address selected, create new if details provided
+        if (!$alamatId && ($validated['desa_id'] || $validated['alamat_lengkap'])) {
             $alamat = Alamat::create([
                 'desa_id' => $validated['desa_id'] ?? null,
                 'alamat_lengkap' => $validated['alamat_lengkap'] ?? null,
@@ -102,28 +105,28 @@ class KartuKeluargaController extends Controller
     {
         $validated = $request->validate([
             'no_kk' => ['required', 'string', 'size:16', Rule::unique('kartu_keluarga', 'no_kk')->ignore($kartuKeluarga->id)],
-            'alamat_lengkap' => ['nullable', 'string'],
-            'desa_id' => ['nullable', 'string', 'exists:indonesia_villages,code'],
+            'alamat_id' => ['nullable', 'exists:alamat,id'],
+            'alamat_lengkap' => ['nullable', 'required_without:alamat_id', 'string'],
+            'desa_id' => ['nullable', 'required_without:alamat_id', 'string', 'exists:indonesia_villages,code'],
         ]);
 
-        // Update or create alamat
-        if ($validated['desa_id'] || $validated['alamat_lengkap']) {
-            if ($kartuKeluarga->alamat_id) {
-                $kartuKeluarga->alamat->update([
-                    'desa_id' => $validated['desa_id'] ?? null,
-                    'alamat_lengkap' => $validated['alamat_lengkap'] ?? null,
-                ]);
-            } else {
-                $alamat = Alamat::create([
-                    'desa_id' => $validated['desa_id'] ?? null,
-                    'alamat_lengkap' => $validated['alamat_lengkap'] ?? null,
-                ]);
-                $kartuKeluarga->alamat_id = $alamat->id;
-            }
+        // Handle address update
+        if (isset($validated['alamat_id']) && $validated['alamat_id']) {
+            // User selected an existing address
+            $kartuKeluarga->alamat_id = $validated['alamat_id'];
+        } elseif ($validated['desa_id'] || $validated['alamat_lengkap']) {
+            // Create new address
+            $alamat = Alamat::create([
+                'desa_id' => $validated['desa_id'] ?? null,
+                'alamat_lengkap' => $validated['alamat_lengkap'] ?? null,
+            ]);
+            $kartuKeluarga->alamat_id = $alamat->id;
         }
 
         $kartuKeluarga->update([
             'no_kk' => $validated['no_kk'],
+            // alamat_id is set above if changed, otherwise it stays same (unless model update needs it explicitly if dirty)
+            'alamat_id' => $kartuKeluarga->alamat_id,
         ]);
 
         return redirect()->route('admin.kartu-keluarga.index')
@@ -181,5 +184,38 @@ class KartuKeluargaController extends Controller
 
         return redirect()->route('admin.kartu-keluarga.show', $kartuKeluarga)
             ->with('message', 'Anggota berhasil dihapus dari KK.');
+    }
+
+    /**
+     * Search kartu keluarga for autocomplete.
+     */
+    public function search(Request $request)
+    {
+        $search = $request->get('query');
+
+        $query = KartuKeluarga::with(['alamat.desa.district.city.province', 'kepalaKeluarga'])
+            ->where('no_kk', 'like', "%{$search}%");
+        
+        // Optional: Also search by head of family name
+        $query->orWhereHas('kepalaKeluarga', function ($q) use ($search) {
+            $q->where('nama', 'like', "%{$search}%");
+        });
+
+        $results = $query->limit(10)->get();
+
+        $formatted = $results->map(function ($item) {
+            $kepala = $item->kepalaKeluarga ? " - " . $item->kepalaKeluarga->nama : "";
+            $alamat = $item->alamat ? $item->alamat->full_address : "Alamat tidak tersedia";
+            
+            return [
+                'id' => $item->id,
+                'no_kk' => $item->no_kk,
+                'text' => $item->no_kk . $kepala,
+                'preview' => $alamat,
+                'alamat_id' => $item->alamat_id, // Useful to inherit address
+            ];
+        });
+
+        return response()->json($formatted);
     }
 }
