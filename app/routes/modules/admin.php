@@ -25,6 +25,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'module:admin'])->gr
     Route::resource('orang', OrangController::class);
 
     // Alamat Management Routes
+    Route::get('alamat/search', [\App\Http\Controllers\AlamatController::class, 'search'])->name('alamat.search');
     Route::resource('alamat', \App\Http\Controllers\AlamatController::class);
 
     // Kartu Keluarga Routes

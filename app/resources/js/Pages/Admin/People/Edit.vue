@@ -1,11 +1,20 @@
 <script setup>
 import ModuleLayout from '@/Layouts/ModuleLayout.vue';
 import AddressSelector from '@/Components/AddressSelector.vue';
+import AddressSearchSelect from '@/Components/AddressSearchSelect.vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
+import { ref } from 'vue';
 
 const props = defineProps({
     orang: Object,
 });
+
+// Default to existing address mode if ID exists, or if no address data at all.
+// Only default to new address mode if explicitly creating one? 
+// Logic: If user has an address (ID), show it in search mode.
+// If user has address data but no ID (legacy?), maybe show new address mode? 
+// For now, assume most have ID.
+const useNewAddress = ref(false);
 
 const form = useForm({
     _method: 'PUT',
@@ -16,10 +25,28 @@ const form = useForm({
     tempat_lahir: props.orang.tempat_lahir,
     nama_ibu_kandung: props.orang.nama_ibu_kandung || '',
     no_whatsapp: props.orang.no_whatsapp || '',
-    alamat_lengkap: props.orang.alamat_ktp?.alamat_lengkap || '',
-    desa_id: props.orang.alamat_ktp?.desa_id || '',
+    alamat_lengkap: '', // we clean this up since we toggle
+    desa_id: '',        // we clean this up since we toggle
+    alamat_id: props.orang.alamat_ktp_id || '',
     dokumen: [],
 });
+
+const toggleAddressMode = () => {
+    useNewAddress.value = !useNewAddress.value;
+    if (useNewAddress.value) {
+        // Switching to New Address: Clear ID, potentially fill legacy data if needed, but let's start fresh or use what was there if relevant
+        form.alamat_id = '';
+        // If we want to edit current address as 'new' (which creates a new copy effectively), we could prefill.
+        // But requested flow usually implies "Search or Create New".
+        // Let's leave fields blank for "New".
+        form.alamat_lengkap = '';
+        form.desa_id = '';
+    } else {
+        // Switching to Search: Clear new address fields
+        form.alamat_lengkap = '';
+        form.desa_id = '';
+    }
+};
 
 const submit = () => {
     form.post(route('admin.orang.update', props.orang.id), {
@@ -174,13 +201,36 @@ const submit = () => {
                             </div>
                         </div>
 
-                        <!-- Address Selector -->
-                        <AddressSelector
-                            v-model:desa-id="form.desa_id"
-                            v-model:alamat-lengkap="form.alamat_lengkap"
-                            :initial-data="orang.alamat_ktp"
-                            :error="form.errors.desa_id"
-                        />
+                        <!-- Address Section -->
+                        <div class="border-t pt-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-medium text-gray-900">Alamat KTP</h3>
+                                <button
+                                    type="button"
+                                    @click="toggleAddressMode"
+                                    class="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                                >
+                                    {{ useNewAddress ? 'Cari Alamat yang Sudah Ada' : 'Buat Alamat Baru' }}
+                                </button>
+                            </div>
+
+                            <div v-if="!useNewAddress" class="space-y-4">
+                                <AddressSearchSelect
+                                    v-model="form.alamat_id"
+                                    :initial-label="props.orang.alamat_ktp?.alamat_lengkap ? props.orang.alamat_ktp.full_address : ''"
+                                    :error="form.errors.alamat_id"
+                                />
+                            </div>
+
+                            <div v-else class="space-y-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                <AddressSelector
+                                    v-model:desa-id="form.desa_id"
+                                    v-model:alamat-lengkap="form.alamat_lengkap"
+                                    :initial-data="props.orang.alamat_ktp"
+                                    :error="form.errors.desa_id"
+                                />
+                            </div>
+                        </div>
                         
                          <!-- Dokumen Upload -->
                          <div class="pt-6 border-t">

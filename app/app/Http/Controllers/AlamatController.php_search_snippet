@@ -1,0 +1,31 @@
+
+    /**
+     * Search alamat for autocomplete.
+     */
+    public function search(Request $request)
+    {
+        $search = $request->get('query');
+        
+        $results = Alamat::query()
+            ->with(['desa.district.city.province'])
+            ->where('alamat_lengkap', 'like', "%{$search}%")
+            ->orWhereHas('desa', function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%");
+            })
+            ->limit(10)
+            ->get();
+            
+        // Format for frontend
+        $formatted = $results->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'text' => $item->full_address, // Uses the accessor
+                'desa_id' => $item->desa_id,
+                'alamat_lengkap' => $item->alamat_lengkap,
+                // Include other details if needed for preview
+                'preview' => "{$item->alamat_lengkap}, " . ($item->desa->name ?? '') . ", " . ($item->desa->district->city->name ?? ''),
+            ];
+        });
+
+        return response()->json($formatted);
+    }

@@ -18,6 +18,8 @@ class Alamat extends Model
         'alamat_lengkap',
     ];
 
+    protected $appends = ['full_address'];
+
     /**
      * Get the village (desa) for this address.
      */

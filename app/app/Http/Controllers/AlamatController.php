@@ -111,4 +111,33 @@ class AlamatController extends Controller
         return redirect()->route('admin.alamat.index')
             ->with('message', 'Data alamat berhasil dihapus.');
     }
+
+    /**
+     * Search alamat for autocomplete.
+     */
+    public function search(Request $request)
+    {
+        $search = $request->get('query');
+        
+        $results = Alamat::with(['desa.district.city.province'])
+            ->where('alamat_lengkap', 'like', "%{$search}%")
+            ->orWhereHas('desa', function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%");
+            })
+            ->limit(10)
+            ->get();
+            
+        // Format for frontend
+        $formatted = $results->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'text' => $item->full_address,
+                'desa_id' => $item->desa_id,
+                'alamat_lengkap' => $item->alamat_lengkap,
+                'preview' => "{$item->alamat_lengkap}, " . ($item->desa->name ?? '') . ", " . ($item->desa->district->city->name ?? ''),
+            ];
+        });
+
+        return response()->json($formatted);
+    }
 }

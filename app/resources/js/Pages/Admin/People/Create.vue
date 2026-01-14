@@ -1,7 +1,11 @@
 <script setup>
 import ModuleLayout from '@/Layouts/ModuleLayout.vue';
 import AddressSelector from '@/Components/AddressSelector.vue';
+import AddressSearchSelect from '@/Components/AddressSearchSelect.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { ref } from 'vue';
+
+const useNewAddress = ref(false);
 
 const form = useForm({
     nik: '',
@@ -13,8 +17,23 @@ const form = useForm({
     no_whatsapp: '',
     alamat_lengkap: '',
     desa_id: '',
+    alamat_id: '',
     dokumen: [],
 });
+
+const toggleAddressMode = () => {
+    useNewAddress.value = !useNewAddress.value;
+    if (useNewAddress.value) {
+        form.alamat_id = '';
+    } else {
+        form.desa_id = '';
+        form.alamat_lengkap = '';
+    }
+};
+
+const handleAddressSelect = (item) => {
+    // Optional: could do something with selected item
+};
 
 const submit = () => {
     form.post(route('admin.orang.store'));
@@ -167,12 +186,36 @@ const submit = () => {
                             </div>
                         </div>
 
-                        <!-- Address Selector -->
-                        <AddressSelector
-                            v-model:desa-id="form.desa_id"
-                            v-model:alamat-lengkap="form.alamat_lengkap"
-                            :error="form.errors.desa_id"
-                        />
+                        <!-- Address Section -->
+                         <div class="border-t pt-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-medium text-gray-900">Alamat KTP</h3>
+                                <button
+                                    type="button"
+                                    @click="toggleAddressMode"
+                                    class="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                                >
+                                    {{ useNewAddress ? 'Cari Alamat yang Sudah Ada' : 'Buat Alamat Baru' }}
+                                </button>
+                            </div>
+
+                            <div v-if="!useNewAddress" class="space-y-4">
+                                <AddressSearchSelect
+                                    v-model="form.alamat_id"
+                                    :error="form.errors.alamat_id"
+                                    @change="handleAddressSelect"
+                                />
+                                <input type="hidden" v-model="form.alamat_id">
+                            </div>
+
+                            <div v-else class="space-y-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                <AddressSelector
+                                    v-model:desa-id="form.desa_id"
+                                    v-model:alamat-lengkap="form.alamat_lengkap"
+                                    :error="form.errors.desa_id"
+                                />
+                            </div>
+                        </div>
 
                         <!-- Dokumen Upload -->
                         <div class="pt-6 border-t">

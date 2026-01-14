@@ -68,14 +68,17 @@ class OrangController extends Controller
             'tempat_lahir' => ['required', 'string', 'max:255'],
             'nama_ibu_kandung' => ['nullable', 'string', 'max:255'],
             'no_whatsapp' => ['nullable', 'string', 'max:20'],
-            'alamat_lengkap' => ['nullable', 'string'],
-            'desa_id' => ['nullable', 'string', 'exists:indonesia_villages,code'],
+            'alamat_id' => ['nullable', 'exists:alamat,id'],
+            'alamat_lengkap' => ['nullable', 'required_without:alamat_id', 'string'],
+            'desa_id' => ['nullable', 'required_without:alamat_id', 'string', 'exists:indonesia_villages,code'],
             'dokumen.*' => ['nullable', 'file', 'max:10240'], // Max 10MB per file
         ]);
 
-        // Create alamat if provided
-        $alamatId = null;
-        if ($validated['desa_id'] || $validated['alamat_lengkap']) {
+        // Determine alamat_id
+        $alamatId = $validated['alamat_id'] ?? null;
+
+        // If no existing address selected, create new if details provided
+        if (!$alamatId && ($validated['desa_id'] || $validated['alamat_lengkap'])) {
             $alamat = Alamat::create([
                 'desa_id' => $validated['desa_id'] ?? null,
                 'alamat_lengkap' => $validated['alamat_lengkap'] ?? null,
@@ -143,26 +146,37 @@ class OrangController extends Controller
             'tempat_lahir' => ['required', 'string', 'max:255'],
             'nama_ibu_kandung' => ['nullable', 'string', 'max:255'],
             'no_whatsapp' => ['nullable', 'string', 'max:20'],
-            'alamat_lengkap' => ['nullable', 'string'],
-            'desa_id' => ['nullable', 'string', 'exists:indonesia_villages,code'],
+            'alamat_id' => ['nullable', 'exists:alamat,id'],
+            'alamat_lengkap' => ['nullable', 'required_without:alamat_id', 'string'],
+            'desa_id' => ['nullable', 'required_without:alamat_id', 'string', 'exists:indonesia_villages,code'],
             'dokumen.*' => ['nullable', 'file', 'max:10240'], // Max 10MB per file
         ]);
 
-        // Update or create alamat
-        if ($validated['desa_id'] || $validated['alamat_lengkap']) {
-            if ($orang->alamat_ktp_id) {
-                $orang->alamatKtp->update([
-                    'desa_id' => $validated['desa_id'] ?? null,
-                    'alamat_lengkap' => $validated['alamat_lengkap'] ?? null,
-                ]);
-            } else {
-                $alamat = Alamat::create([
-                    'desa_id' => $validated['desa_id'] ?? null,
-                    'alamat_lengkap' => $validated['alamat_lengkap'] ?? null,
-                ]);
-                $orang->alamat_ktp_id = $alamat->id;
-            }
+        // Handle address update
+        if (isset($validated['alamat_id']) && $validated['alamat_id']) {
+            // User selected an existing address
+            $orang->alamat_ktp_id = $validated['alamat_id'];
+        } elseif ($validated['desa_id'] || $validated['alamat_lengkap']) {
+            // User entered new address details
+            // Always create new if explicitly inputting details (assuming intent is to use specific new details)
+            // Or update existing if linked?
+            // "Buat Alamat Baru" implies creating new. 
+            // If user was editing an existing linked address, they should edit that address directly or create new.
+            // Let's create new to be safe and avoid mutating shared addresses inadvertently, 
+            // unless we want to "Edit current address". 
+            // Given the requirement "cari alamat dan bila tidak ada ada tombol buat alamat baru", 
+            // it implies switching to a new address.
+            
+            $alamat = Alamat::create([
+                'desa_id' => $validated['desa_id'] ?? null,
+                'alamat_lengkap' => $validated['alamat_lengkap'] ?? null,
+            ]);
+            $orang->alamat_ktp_id = $alamat->id;
         }
+        // If neither, keep existing or handle removal? 
+        // For now, if fields are empty and no alamat_id, it might mean keeping current or clearing. 
+        // But validation `required_without:alamat_id` enforces at least one path if we strictly follow it.
+        // However, since they are nullable, let's just save.
 
         $orang->update([
             'nik' => $validated['nik'],
