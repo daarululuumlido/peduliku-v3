@@ -24,6 +24,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'module:admin'])->gr
     Route::delete('/orang/{id}/force-delete', [OrangController::class, 'forceDelete'])->name('orang.force-delete');
     Route::resource('orang', OrangController::class);
 
+    // Alamat Management Routes
+    Route::resource('alamat', \App\Http\Controllers\AlamatController::class);
+
     // Kartu Keluarga Routes
     Route::post('/kartu-keluarga/{kartuKeluarga}/add-member', [KartuKeluargaController::class, 'addMember'])->name('kartu-keluarga.add-member');
     Route::post('/kartu-keluarga/{kartuKeluarga}/remove-member', [KartuKeluargaController::class, 'removeMember'])->name('kartu-keluarga.remove-member');

@@ -41,6 +41,12 @@ return [
                 'permission' => 'kartu_keluarga.view',
             ],
             [
+                'label' => 'Data Alamat',
+                'route' => 'admin.alamat.index',
+                'icon' => 'map-pin',
+                'permission' => 'alamat.view',
+            ],
+            [
                 'type' => 'group',
                 'label' => 'Settings',
                 'icon' => 'cog',

@@ -23,7 +23,7 @@ class Alamat extends Model
      */
     public function desa(): BelongsTo
     {
-        return $this->belongsTo(Village::class, 'desa_id', 'id');
+        return $this->belongsTo(Village::class, 'desa_id', 'code');
     }
 
     /**
