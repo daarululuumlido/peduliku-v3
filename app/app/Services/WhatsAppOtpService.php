@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Log;
 class WhatsAppOtpService
 {
     protected string $gateway;
+
     protected string $apiKey;
 
     public function __construct()
@@ -56,6 +57,7 @@ class WhatsAppOtpService
                     'phone' => $phoneNumber,
                     'status' => $response->json('status'),
                 ]);
+
                 return true;
             }
 
@@ -63,12 +65,14 @@ class WhatsAppOtpService
                 'phone' => $phoneNumber,
                 'response' => $response->json(),
             ]);
+
             return false;
         } catch (\Exception $e) {
             Log::error('Fonnte API exception', [
                 'phone' => $phoneNumber,
                 'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
@@ -91,6 +95,7 @@ class WhatsAppOtpService
                     'phone' => $phoneNumber,
                     'status' => $response->json('status'),
                 ]);
+
                 return true;
             }
 
@@ -98,12 +103,14 @@ class WhatsAppOtpService
                 'phone' => $phoneNumber,
                 'response' => $response->json(),
             ]);
+
             return false;
         } catch (\Exception $e) {
             Log::error('Wablas API exception', [
                 'phone' => $phoneNumber,
                 'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
@@ -117,6 +124,7 @@ class WhatsAppOtpService
             'phone' => $phoneNumber,
             'message' => $message,
         ]);
+
         return true;
     }
 
@@ -130,12 +138,12 @@ class WhatsAppOtpService
 
         // Convert 08xx to 628xx
         if (str_starts_with($phone, '0')) {
-            $phone = '62' . substr($phone, 1);
+            $phone = '62'.substr($phone, 1);
         }
 
         // Add 62 if not present
-        if (!str_starts_with($phone, '62')) {
-            $phone = '62' . $phone;
+        if (! str_starts_with($phone, '62')) {
+            $phone = '62'.$phone;
         }
 
         return $phone;

@@ -26,7 +26,7 @@ class WhatsAppOtpController extends Controller
     public function showForm(): Response
     {
         // Check if WhatsApp login is enabled
-        if (!config('peduliku.login_methods.whatsapp')) {
+        if (! config('peduliku.login_methods.whatsapp')) {
             abort(404);
         }
 
@@ -49,13 +49,13 @@ class WhatsAppOtpController extends Controller
         // Check if user exists with this WhatsApp number
         $user = User::where('whatsapp', $phone)->first();
 
-        if (!$user) {
+        if (! $user) {
             return back()->withErrors([
                 'whatsapp' => 'Nomor WhatsApp tidak terdaftar dalam sistem.',
             ]);
         }
 
-        if (!$user->is_active) {
+        if (! $user->is_active) {
             return back()->withErrors([
                 'whatsapp' => 'Akun Anda telah dinonaktifkan.',
             ]);
@@ -75,7 +75,7 @@ class WhatsAppOtpController extends Controller
         // Send OTP via WhatsApp
         $sent = $this->otpService->sendOtp($phone, $otp);
 
-        if (!$sent) {
+        if (! $sent) {
             return back()->withErrors([
                 'whatsapp' => 'Gagal mengirim OTP. Silakan coba lagi.',
             ]);
@@ -101,7 +101,7 @@ class WhatsAppOtpController extends Controller
         $cacheKey = "whatsapp_otp_{$phone}";
         $cached = Cache::get($cacheKey);
 
-        if (!$cached) {
+        if (! $cached) {
             return back()->withErrors([
                 'otp' => 'Kode OTP sudah kadaluarsa. Silakan minta kode baru.',
             ]);
@@ -110,6 +110,7 @@ class WhatsAppOtpController extends Controller
         // Check attempts
         if ($cached['attempts'] >= 3) {
             Cache::forget($cacheKey);
+
             return back()->withErrors([
                 'otp' => 'Terlalu banyak percobaan. Silakan minta kode baru.',
             ]);
@@ -159,7 +160,7 @@ class WhatsAppOtpController extends Controller
 
         // Get user
         $user = User::where('whatsapp', $phone)->first();
-        if (!$user) {
+        if (! $user) {
             return back()->withErrors([
                 'whatsapp' => 'Nomor WhatsApp tidak terdaftar.',
             ]);

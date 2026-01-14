@@ -50,7 +50,7 @@ class RoleController extends Controller
 
         $role = Role::create(['name' => $validated['name']]);
 
-        if (!empty($validated['permissions'])) {
+        if (! empty($validated['permissions'])) {
             $permissions = Permission::whereIn('id', $validated['permissions'])->get();
             $role->syncPermissions($permissions);
         }
@@ -86,14 +86,14 @@ class RoleController extends Controller
         }
 
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255', 'unique:roles,name,' . $role->id],
+            'name' => ['required', 'string', 'max:255', 'unique:roles,name,'.$role->id],
             'permissions' => ['array'],
             'permissions.*' => ['exists:permissions,id'],
         ]);
 
         $role->update(['name' => $validated['name']]);
 
-        if (!empty($validated['permissions'])) {
+        if (! empty($validated['permissions'])) {
             $permissions = Permission::whereIn('id', $validated['permissions'])->get();
             $role->syncPermissions($permissions);
         } else {
@@ -119,7 +119,7 @@ class RoleController extends Controller
         // Check if role has users
         if ($role->users()->count() > 0) {
             return back()->withErrors([
-                'delete' => 'Role tidak dapat dihapus karena masih digunakan oleh ' . $role->users()->count() . ' user.',
+                'delete' => 'Role tidak dapat dihapus karena masih digunakan oleh '.$role->users()->count().' user.',
             ]);
         }
 

@@ -21,9 +21,9 @@ class AlamatController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('alamat_lengkap', 'like', "%{$search}%")
-                  ->orWhereHas('desa', function ($q) use ($search) {
-                      $q->where('name', 'like', "%{$search}%");
-                  });
+                    ->orWhereHas('desa', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -118,7 +118,7 @@ class AlamatController extends Controller
     public function search(Request $request)
     {
         $search = $request->get('query');
-        
+
         $results = Alamat::with(['desa.district.city.province'])
             ->where('alamat_lengkap', 'like', "%{$search}%")
             ->orWhereHas('desa', function ($q) use ($search) {
@@ -126,7 +126,7 @@ class AlamatController extends Controller
             })
             ->limit(10)
             ->get();
-            
+
         // Format for frontend
         $formatted = $results->map(function ($item) {
             return [
@@ -134,7 +134,7 @@ class AlamatController extends Controller
                 'text' => $item->full_address,
                 'desa_id' => $item->desa_id,
                 'alamat_lengkap' => $item->alamat_lengkap,
-                'preview' => "{$item->alamat_lengkap}, " . ($item->desa->name ?? '') . ", " . ($item->desa->district->city->name ?? ''),
+                'preview' => "{$item->alamat_lengkap}, ".($item->desa->name ?? '').', '.($item->desa->district->city->name ?? ''),
             ];
         });
 

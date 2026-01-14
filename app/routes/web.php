@@ -19,11 +19,11 @@ Route::get('/', function () {
 Route::get('/dashboard', function (ModuleService $moduleService) {
     $user = request()->user();
     $defaultModule = $moduleService->getDefaultModule($user);
-    
+
     if ($defaultModule) {
         return redirect()->route("{$defaultModule}.dashboard");
     }
-    
+
     // Fallback if no modules accessible
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
@@ -39,7 +39,6 @@ Route::middleware('auth')->group(function () {
 | Admin Module Routes
 |--------------------------------------------------------------------------
 */
-
 
 require __DIR__.'/modules/admin.php';
 require __DIR__.'/auth.php';

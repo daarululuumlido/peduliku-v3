@@ -18,7 +18,7 @@ class PermissionController extends Controller
 
         // Search
         if ($request->has('search') && $request->search) {
-            $query->where('name', 'like', '%' . $request->search . '%');
+            $query->where('name', 'like', '%'.$request->search.'%');
         }
 
         // Group by module (first part of permission name)
@@ -79,7 +79,7 @@ class PermissionController extends Controller
     public function update(Request $request, Permission $permission)
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255', 'unique:permissions,name,' . $permission->id, 'regex:/^[a-z_]+\.[a-z_]+$/'],
+            'name' => ['required', 'string', 'max:255', 'unique:permissions,name,'.$permission->id, 'regex:/^[a-z_]+\.[a-z_]+$/'],
         ], [
             'name.regex' => 'Format nama permission harus: module.action (contoh: users.create)',
         ]);
@@ -98,7 +98,7 @@ class PermissionController extends Controller
         // Check if permission is used by any role
         if ($permission->roles()->count() > 0) {
             return back()->withErrors([
-                'delete' => 'Permission tidak dapat dihapus karena masih digunakan oleh ' . $permission->roles()->count() . ' role.',
+                'delete' => 'Permission tidak dapat dihapus karena masih digunakan oleh '.$permission->roles()->count().' role.',
             ]);
         }
 

@@ -13,7 +13,7 @@ return [
     */
 
     'login_methods' => [
-        'google'   => true,  // Always enabled as primary
+        'google' => true,  // Always enabled as primary
         'password' => env('AUTH_PASSWORD_ENABLED', true),
         'whatsapp' => env('AUTH_WHATSAPP_ENABLED', false),
     ],

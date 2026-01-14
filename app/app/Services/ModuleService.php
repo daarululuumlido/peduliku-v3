@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\User;
-use Illuminate\Support\Facades\Gate;
 
 class ModuleService
 {
@@ -12,7 +11,7 @@ class ModuleService
      */
     public function getAccessibleModules(?User $user): array
     {
-        if (!$user) {
+        if (! $user) {
             return [];
         }
 
@@ -38,7 +37,7 @@ class ModuleService
      */
     public function isModuleAccessible(string $moduleSlug, ?User $user): bool
     {
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
@@ -48,14 +47,14 @@ class ModuleService
         }
 
         $module = config("modules.{$moduleSlug}");
-        
-        if (!$module) {
+
+        if (! $module) {
             return false;
         }
 
         $permission = $module['permission'] ?? null;
-        
-        if (!$permission) {
+
+        if (! $permission) {
             return true; // No permission required
         }
 
@@ -67,13 +66,13 @@ class ModuleService
      */
     public function getModuleMenu(string $moduleSlug, ?User $user): array
     {
-        if (!$user) {
+        if (! $user) {
             return [];
         }
 
         $module = config("modules.{$moduleSlug}");
-        
-        if (!$module || !isset($module['menu'])) {
+
+        if (! $module || ! isset($module['menu'])) {
             return [];
         }
 
@@ -91,14 +90,14 @@ class ModuleService
             // Check if this is a group
             if (isset($item['type']) && $item['type'] === 'group') {
                 // Check group permission (can be OR separated)
-                if (!$this->checkPermission($item['permission'] ?? null, $user)) {
+                if (! $this->checkPermission($item['permission'] ?? null, $user)) {
                     continue;
                 }
 
                 // Filter nested items
                 $nestedItems = $this->filterMenuItems($item['items'] ?? [], $user);
-                
-                if (!empty($nestedItems)) {
+
+                if (! empty($nestedItems)) {
                     $filtered[] = [
                         'type' => 'group',
                         'label' => $item['label'],
@@ -108,7 +107,7 @@ class ModuleService
                 }
             } else {
                 // Regular menu item
-                if (!$this->checkPermission($item['permission'] ?? null, $user)) {
+                if (! $this->checkPermission($item['permission'] ?? null, $user)) {
                     continue;
                 }
 
@@ -128,7 +127,7 @@ class ModuleService
      */
     protected function checkPermission(?string $permission, User $user): bool
     {
-        if (!$permission) {
+        if (! $permission) {
             return true;
         }
 
@@ -145,6 +144,7 @@ class ModuleService
                     return true;
                 }
             }
+
             return false;
         }
 
@@ -157,7 +157,7 @@ class ModuleService
     public function getDefaultModule(?User $user): ?string
     {
         $modules = $this->getAccessibleModules($user);
-        
+
         if (empty($modules)) {
             return null;
         }

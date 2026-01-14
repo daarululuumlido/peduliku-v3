@@ -216,9 +216,8 @@ class OrangTest extends TestCase
             ->get(route('orang.index', ['search' => 'John']));
 
         $response->assertOk();
-        $response->assertInertia(fn ($page) => 
-            $page->component('People/Index')
-                ->has('orang.data', 1)
+        $response->assertInertia(fn ($page) => $page->component('People/Index')
+            ->has('orang.data', 1)
         );
     }
 
@@ -244,9 +243,8 @@ class OrangTest extends TestCase
             ->get(route('orang.index', ['gender' => 'P']));
 
         $response->assertOk();
-        $response->assertInertia(fn ($page) => 
-            $page->component('People/Index')
-                ->has('orang.data', 1)
+        $response->assertInertia(fn ($page) => $page->component('People/Index')
+            ->has('orang.data', 1)
         );
     }
 }

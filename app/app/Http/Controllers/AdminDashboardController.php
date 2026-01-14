@@ -16,10 +16,10 @@ class AdminDashboardController extends Controller
     public function index(): Response
     {
         $user = request()->user();
-        
+
         // Prepare stats based on role
         $stats = $this->getStatsForUser($user);
-        
+
         return Inertia::render('Admin/Dashboard', [
             'stats' => $stats,
         ]);

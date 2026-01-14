@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Orang;
 use App\Models\Alamat;
+use App\Models\Orang;
 use App\Services\DocumentService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -12,9 +12,7 @@ use Inertia\Response;
 
 class OrangController extends Controller
 {
-    public function __construct(protected DocumentService $documentService)
-    {
-    }
+    public function __construct(protected DocumentService $documentService) {}
 
     /**
      * Display a listing of orang.
@@ -28,7 +26,7 @@ class OrangController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('nama', 'like', "%{$search}%")
-                  ->orWhere('nik', 'like', "%{$search}%");
+                    ->orWhere('nik', 'like', "%{$search}%");
             });
         }
 
@@ -78,7 +76,7 @@ class OrangController extends Controller
         $alamatId = $validated['alamat_id'] ?? null;
 
         // If no existing address selected, create new if details provided
-        if (!$alamatId && ($validated['desa_id'] || $validated['alamat_lengkap'])) {
+        if (! $alamatId && ($validated['desa_id'] || $validated['alamat_lengkap'])) {
             $alamat = Alamat::create([
                 'desa_id' => $validated['desa_id'] ?? null,
                 'alamat_lengkap' => $validated['alamat_lengkap'] ?? null,
@@ -160,21 +158,21 @@ class OrangController extends Controller
             // User entered new address details
             // Always create new if explicitly inputting details (assuming intent is to use specific new details)
             // Or update existing if linked?
-            // "Buat Alamat Baru" implies creating new. 
+            // "Buat Alamat Baru" implies creating new.
             // If user was editing an existing linked address, they should edit that address directly or create new.
-            // Let's create new to be safe and avoid mutating shared addresses inadvertently, 
-            // unless we want to "Edit current address". 
-            // Given the requirement "cari alamat dan bila tidak ada ada tombol buat alamat baru", 
+            // Let's create new to be safe and avoid mutating shared addresses inadvertently,
+            // unless we want to "Edit current address".
+            // Given the requirement "cari alamat dan bila tidak ada ada tombol buat alamat baru",
             // it implies switching to a new address.
-            
+
             $alamat = Alamat::create([
                 'desa_id' => $validated['desa_id'] ?? null,
                 'alamat_lengkap' => $validated['alamat_lengkap'] ?? null,
             ]);
             $orang->alamat_ktp_id = $alamat->id;
         }
-        // If neither, keep existing or handle removal? 
-        // For now, if fields are empty and no alamat_id, it might mean keeping current or clearing. 
+        // If neither, keep existing or handle removal?
+        // For now, if fields are empty and no alamat_id, it might mean keeping current or clearing.
         // But validation `required_without:alamat_id` enforces at least one path if we strictly follow it.
         // However, since they are nullable, let's just save.
 

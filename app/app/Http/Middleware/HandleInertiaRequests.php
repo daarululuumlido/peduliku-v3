@@ -15,9 +15,7 @@ class HandleInertiaRequests extends Middleware
      */
     protected $rootView = 'app';
 
-    public function __construct(protected ModuleService $moduleService)
-    {
-    }
+    public function __construct(protected ModuleService $moduleService) {}
 
     /**
      * Determine the current asset version.
@@ -36,7 +34,7 @@ class HandleInertiaRequests extends Middleware
     {
         $user = $request->user();
         $currentModule = $this->detectCurrentModule($request);
-        
+
         // For pages without a module context (like profile), use the default module
         $effectiveModule = $currentModule ?? $this->moduleService->getDefaultModule($user);
 
@@ -47,8 +45,8 @@ class HandleInertiaRequests extends Middleware
             ],
             'modules' => fn () => $user ? $this->moduleService->getAccessibleModules($user) : [],
             'currentModule' => $effectiveModule,
-            'moduleMenu' => fn () => $user && $effectiveModule 
-                ? $this->moduleService->getModuleMenu($effectiveModule, $user) 
+            'moduleMenu' => fn () => $user && $effectiveModule
+                ? $this->moduleService->getModuleMenu($effectiveModule, $user)
                 : [],
             'flash' => [
                 'message' => fn () => $request->session()->get('message'),
@@ -63,17 +61,17 @@ class HandleInertiaRequests extends Middleware
     protected function detectCurrentModule(Request $request): ?string
     {
         $routeName = $request->route()?->getName();
-        
-        if (!$routeName) {
+
+        if (! $routeName) {
             return null;
         }
 
         // Extract module from route name (e.g., 'admin.dashboard' => 'admin')
         $parts = explode('.', $routeName);
-        
+
         if (count($parts) > 0) {
             $potentialModule = $parts[0];
-            
+
             // Check if this is a valid module
             if (config("modules.{$potentialModule}")) {
                 return $potentialModule;

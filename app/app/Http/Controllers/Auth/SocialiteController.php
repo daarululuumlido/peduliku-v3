@@ -38,7 +38,7 @@ class SocialiteController extends Controller
             );
 
             // Check if user is active
-            if (!$user->is_active) {
+            if (! $user->is_active) {
                 return redirect()->route('login')->withErrors([
                     'email' => 'Akun Anda telah dinonaktifkan. Silakan hubungi administrator.',
                 ]);

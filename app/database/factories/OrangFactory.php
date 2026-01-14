@@ -20,18 +20,18 @@ class OrangFactory extends Factory
     public function definition(): array
     {
         $gender = fake('id_ID')->randomElement(['L', 'P']);
-        $firstName = $gender === 'L' 
-            ? fake('id_ID')->firstNameMale() 
+        $firstName = $gender === 'L'
+            ? fake('id_ID')->firstNameMale()
             : fake('id_ID')->firstNameFemale();
         $lastName = fake('id_ID')->lastName();
 
         return [
             'nik' => fake('id_ID')->unique()->nik(),
-            'nama' => $firstName . ' ' . $lastName,
+            'nama' => $firstName.' '.$lastName,
             'gender' => $gender,
             'tanggal_lahir' => fake()->dateTimeBetween('-70 years', '-17 years'),
             'tempat_lahir' => fake('id_ID')->city(),
-            'nama_ibu_kandung' => fake('id_ID')->firstNameFemale() . ' ' . fake('id_ID')->lastName(),
+            'nama_ibu_kandung' => fake('id_ID')->firstNameFemale().' '.fake('id_ID')->lastName(),
             'no_whatsapp' => fake('id_ID')->phoneNumber(),
             'alamat_ktp_id' => null,
             'kartu_keluarga_id' => null,

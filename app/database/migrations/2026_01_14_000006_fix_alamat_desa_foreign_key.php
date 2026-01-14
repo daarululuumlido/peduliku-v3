@@ -13,14 +13,14 @@ return new class extends Migration
     {
         Schema::table('alamat', function (Blueprint $table) {
             // Drop constraint lama yang salah (referencing 'id')
-            // SQLite di Laravel hanya support dropForeign jika DBAL terinstall, 
+            // SQLite di Laravel hanya support dropForeign jika DBAL terinstall,
             // tapi karena ini file baru kita coba drop constraint by name.
-            // Jika driver SQLite, dropForeign mungkin tidak jalan mulus tanpa trik, 
+            // Jika driver SQLite, dropForeign mungkin tidak jalan mulus tanpa trik,
             // tapi kita coba standar Laravel dulu.
-            
+
             // Perlu dicatat: nama constraint default di Laravel biasanya 'table_column_foreign'
             $table->dropForeign(['desa_id']);
-            
+
             // Tambahkan constraint baru referencing 'code'
             $table->foreign('desa_id')
                 ->references('code')

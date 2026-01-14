@@ -57,7 +57,7 @@ class DocumentService
      */
     public function getUrl(LampiranDokumen $dokumen, int $expiresMinutes = 60): ?string
     {
-        if (!Storage::disk($this->disk)->exists($dokumen->path)) {
+        if (! Storage::disk($this->disk)->exists($dokumen->path)) {
             return null;
         }
 
@@ -78,7 +78,7 @@ class DocumentService
      */
     public function download(LampiranDokumen $dokumen): ?string
     {
-        if (!Storage::disk($this->disk)->exists($dokumen->path)) {
+        if (! Storage::disk($this->disk)->exists($dokumen->path)) {
             return null;
         }
 

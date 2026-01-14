@@ -9,9 +9,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class EnsureModuleAccess
 {
-    public function __construct(protected ModuleService $moduleService)
-    {
-    }
+    public function __construct(protected ModuleService $moduleService) {}
 
     /**
      * Handle an incoming request.
@@ -20,11 +18,11 @@ class EnsureModuleAccess
     {
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('login');
         }
 
-        if (!$this->moduleService->isModuleAccessible($module, $user)) {
+        if (! $this->moduleService->isModuleAccessible($module, $user)) {
             abort(403, 'Anda tidak memiliki akses ke modul ini.');
         }
 

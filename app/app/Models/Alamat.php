@@ -41,7 +41,7 @@ class Alamat extends Model
 
         if ($this->desa) {
             $parts[] = $this->desa->name;
-            $parts[] = 'Kec. ' . $this->desa->district->name;
+            $parts[] = 'Kec. '.$this->desa->district->name;
             $parts[] = $this->desa->district->city->name;
             $parts[] = $this->desa->district->city->province->name;
         }
