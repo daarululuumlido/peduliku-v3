@@ -29,6 +29,14 @@ class Alamat extends Model
     }
 
     /**
+     * Get the people linked to this address.
+     */
+    public function orang()
+    {
+        return $this->hasMany(Orang::class, 'alamat_ktp_id');
+    }
+
+    /**
      * Get full address string including village hierarchy.
      */
     public function getFullAddressAttribute(): string

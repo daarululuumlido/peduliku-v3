@@ -14,7 +14,8 @@ class AlamatController extends Controller
      */
     public function index(Request $request): Response
     {
-        $query = Alamat::with(['desa.district.city.province']);
+        $query = Alamat::with(['desa.district.city.province'])
+            ->withCount(['orang']);
 
         // Search by complete address or village name
         if ($request->has('search') && $request->search) {
