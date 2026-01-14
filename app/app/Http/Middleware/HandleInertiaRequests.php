@@ -36,6 +36,9 @@ class HandleInertiaRequests extends Middleware
     {
         $user = $request->user();
         $currentModule = $this->detectCurrentModule($request);
+        
+        // For pages without a module context (like profile), use the default module
+        $effectiveModule = $currentModule ?? $this->moduleService->getDefaultModule($user);
 
         return [
             ...parent::share($request),
@@ -43,9 +46,9 @@ class HandleInertiaRequests extends Middleware
                 'user' => $user,
             ],
             'modules' => fn () => $user ? $this->moduleService->getAccessibleModules($user) : [],
-            'currentModule' => $currentModule,
-            'moduleMenu' => fn () => $user && $currentModule 
-                ? $this->moduleService->getModuleMenu($currentModule, $user) 
+            'currentModule' => $effectiveModule,
+            'moduleMenu' => fn () => $user && $effectiveModule 
+                ? $this->moduleService->getModuleMenu($effectiveModule, $user) 
                 : [],
             'flash' => [
                 'message' => fn () => $request->session()->get('message'),
@@ -80,4 +83,3 @@ class HandleInertiaRequests extends Middleware
         return null;
     }
 }
-

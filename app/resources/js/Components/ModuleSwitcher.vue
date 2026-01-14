@@ -1,8 +1,10 @@
 <script setup>
 import { computed } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
+import { useThemeStore } from '@/stores/useThemeStore';
 
 const page = usePage();
+const themeStore = useThemeStore();
 
 const modules = computed(() => page.props.modules || {});
 const currentModule = computed(() => page.props.currentModule);
@@ -28,39 +30,58 @@ const moduleIcons = {
 function getIcon(iconName) {
     return moduleIcons[iconName] || moduleIcons['cog-6-tooth'];
 }
+
+// Get gradient style using theme colors
+function getGradientStyle() {
+    return {
+        background: `linear-gradient(135deg, ${themeStore.primaryColor}, ${themeStore.secondaryColor})`
+    };
+}
 </script>
 
 <template>
     <div class="relative" v-if="currentModuleData">
         <div class="group">
             <button
-                class="flex items-center w-full px-3 py-2 text-left bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-lg"
+                class="flex w-full items-center rounded-lg px-3 py-2 text-left shadow-lg transition-all duration-200 hover:brightness-110"
+                :style="getGradientStyle()"
             >
-                <div class="flex items-center justify-center w-8 h-8 bg-white/20 rounded-lg mr-3">
-                    <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" v-html="getIcon(currentModuleData.icon)"></svg>
+                <div class="mr-3 flex h-8 w-8 items-center justify-center rounded-lg bg-white/20">
+                    <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" v-html="getIcon(currentModuleData.icon)"></svg>
                 </div>
                 <span class="font-semibold text-white">{{ currentModuleData.name }}</span>
-                <svg v-if="otherModules.length > 0" class="w-4 h-4 ml-auto text-white/70 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <svg v-if="otherModules.length > 0" class="ml-auto h-4 w-4 text-white/70 transition-colors group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15 12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
                 </svg>
             </button>
 
             <!-- Dropdown -->
-            <div v-if="otherModules.length > 0" class="absolute left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+            <div v-if="otherModules.length > 0" class="absolute left-0 right-0 z-50 mt-2 rounded-lg border border-gray-200 bg-white opacity-0 shadow-xl transition-all duration-200 invisible group-hover:visible group-hover:opacity-100 dark:border-slate-600 dark:bg-slate-700">
                 <div class="p-2">
-                    <div class="text-xs font-medium text-gray-400 uppercase tracking-wider px-2 py-1 mb-1">
+                    <div class="mb-1 px-2 py-1 text-xs font-medium uppercase tracking-wider text-gray-400 dark:text-slate-400">
                         Pindah Modul
                     </div>
                     <Link
                         v-for="mod in otherModules"
                         :key="mod.slug"
                         :href="route(mod.route)"
-                        class="flex items-center px-2 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+                        class="flex items-center rounded-lg px-2 py-2 transition-colors hover:bg-gray-100 dark:hover:bg-slate-600"
                     >
-                        <div class="flex items-center justify-center w-8 h-8 bg-indigo-100 rounded-lg mr-3">
-                            <svg class="w-5 h-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" v-html="getIcon(mod.icon)"></svg>
+                        <div 
+                            class="mr-3 flex h-8 w-8 items-center justify-center rounded-lg"
+                            :style="{ backgroundColor: themeStore.primaryColor + '20' }"
+                        >
+                            <svg 
+                                class="h-5 w-5" 
+                                :style="{ color: themeStore.primaryColor }"
+                                fill="none" 
+                                viewBox="0 0 24 24" 
+                                stroke-width="1.5" 
+                                stroke="currentColor" 
+                                v-html="getIcon(mod.icon)"
+                            ></svg>
                         </div>
-                        <span class="font-medium text-gray-700">{{ mod.name }}</span>
+                        <span class="font-medium text-gray-700 dark:text-slate-200">{{ mod.name }}</span>
                     </Link>
                 </div>
             </div>

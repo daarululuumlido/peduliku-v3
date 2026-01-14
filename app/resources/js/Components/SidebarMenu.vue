@@ -1,8 +1,10 @@
 <script setup>
 import { computed } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
+import { useThemeStore } from '@/stores/useThemeStore';
 
 const page = usePage();
+const themeStore = useThemeStore();
 
 const menu = computed(() => page.props.moduleMenu || []);
 
@@ -14,6 +16,8 @@ const menuIcons = {
     'user-circle': `<path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />`,
     'shield-check': `<path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />`,
     'key': `<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z" />`,
+    'chart-bar': `<path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />`,
+    'document': `<path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />`,
 };
 
 function getIcon(iconName) {
@@ -34,30 +38,38 @@ function isActive(routeName) {
 function isGroupActive(items) {
     return items.some(item => isActive(item.route));
 }
+
+// Get active gradient style
+function getActiveStyle() {
+    return {
+        background: `linear-gradient(135deg, ${themeStore.primaryColor}, ${themeStore.secondaryColor})`
+    };
+}
 </script>
 
 <template>
-    <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+    <nav class="aside-scrollbar flex-1 overflow-y-auto px-3 py-4">
         <template v-for="(item, index) in menu" :key="index">
             <!-- Group menu -->
             <div v-if="item.type === 'group'" class="mt-6">
-                <div class="flex items-center px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                    <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" v-html="getIcon(item.icon)"></svg>
+                <div class="flex items-center px-3 py-2 text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-slate-400">
+                    <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" v-html="getIcon(item.icon)"></svg>
                     {{ item.label }}
                 </div>
-                <div class="space-y-1 mt-1">
+                <div class="mt-1 space-y-1">
                     <Link
                         v-for="(subItem, subIndex) in item.items"
                         :key="subIndex"
                         :href="route(subItem.route)"
-                        class="flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-150"
+                        class="aside-menu-item flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150"
                         :class="[
                             isActive(subItem.route)
-                                ? 'bg-indigo-100 text-indigo-700'
-                                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                                ? 'aside-menu-item-active shadow-md'
+                                : ''
                         ]"
+                        :style="isActive(subItem.route) ? getActiveStyle() : {}"
                     >
-                        <svg class="w-5 h-5 mr-3" :class="isActive(subItem.route) ? 'text-indigo-600' : 'text-gray-400'" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" v-html="getIcon(subItem.icon)"></svg>
+                        <svg class="mr-3 h-5 w-5" :class="isActive(subItem.route) ? 'text-white' : 'text-gray-400 dark:text-slate-400'" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" v-html="getIcon(subItem.icon)"></svg>
                         {{ subItem.label }}
                     </Link>
                 </div>
@@ -67,14 +79,15 @@ function isGroupActive(items) {
             <Link
                 v-else
                 :href="route(item.route)"
-                class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-150"
+                class="aside-menu-item flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150"
                 :class="[
                     isActive(item.route)
-                        ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md'
-                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                        ? 'aside-menu-item-active shadow-md'
+                        : ''
                 ]"
+                :style="isActive(item.route) ? getActiveStyle() : {}"
             >
-                <svg class="w-5 h-5 mr-3" :class="isActive(item.route) ? 'text-white' : 'text-gray-400'" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" v-html="getIcon(item.icon)"></svg>
+                <svg class="mr-3 h-5 w-5" :class="isActive(item.route) ? 'text-white' : 'text-gray-400 dark:text-slate-400'" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" v-html="getIcon(item.icon)"></svg>
                 {{ item.label }}
             </Link>
         </template>

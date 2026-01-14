@@ -19,5 +19,8 @@
         "tailwindcss": "^4.0.0",
         "vite": "^7.0.0",
         "vue": "^3.4.0"
+    },
+    "dependencies": {
+        "pinia": "^3.0.4"
     }
 }

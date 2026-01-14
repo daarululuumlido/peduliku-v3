@@ -1,1 +1,302 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+@plugin '@tailwindcss/forms';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --transition-position: right, left, top, bottom, margin, padding;
+}
+
+/* Theme CSS Variables */
+:root {
+  --theme-primary: #6366f1;
+  --theme-primary-hover: #4f46e5;
+  --theme-primary-light: #e0e7ff;
+  --theme-secondary: #a855f7;
+  --theme-secondary-hover: #9333ea;
+  --theme-font: 'Inter', sans-serif;
+}
+
+/* Apply theme font globally */
+body {
+  font-family: var(--theme-font);
+}
+
+/* =========================================
+   SIDEBAR STYLES
+   ========================================= */
+
+/* Sidebar styles - Light mode */
+.aside {
+  @apply bg-white border-r border-gray-200;
+}
+
+.aside-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: theme('colors.gray.300') theme('colors.white');
+}
+
+.aside-brand {
+  @apply bg-gray-50 text-gray-900 border-b border-gray-200;
+}
+
+.aside-menu-item {
+  @apply text-gray-600 hover:text-gray-900 hover:bg-gray-100;
+}
+
+.aside-menu-item-active {
+  @apply text-white;
+  background: linear-gradient(135deg, var(--theme-primary), var(--theme-secondary));
+}
+
+/* Sidebar styles - Dark mode */
+.dark .aside {
+  @apply bg-slate-800 border-slate-700;
+}
+
+.dark .aside-scrollbar {
+  scrollbar-color: theme('colors.slate.600') theme('colors.slate.800');
+}
+
+.dark .aside-brand {
+  @apply bg-slate-900 text-white border-slate-700;
+}
+
+.dark .aside-menu-item {
+  @apply text-slate-300 hover:text-white hover:bg-slate-700;
+}
+
+.dark .aside-menu-item-active {
+  @apply text-white;
+}
+
+/* =========================================
+   GLOBAL DARK MODE STYLES
+   ========================================= */
+
+/* Cards - Auto dark mode */
+.dark .bg-white {
+  @apply !bg-slate-800;
+}
+
+.dark .bg-gray-50 {
+  @apply !bg-slate-900;
+}
+
+.dark .bg-gray-100 {
+  @apply !bg-slate-700;
+}
+
+/* Borders */
+.dark .border-gray-100,
+.dark .border-gray-200,
+.dark .border-gray-300 {
+  @apply !border-slate-700;
+}
+
+.dark .divide-gray-100> :not([hidden])~ :not([hidden]),
+.dark .divide-gray-200> :not([hidden])~ :not([hidden]) {
+  @apply !border-slate-700;
+}
+
+/* Text colors */
+.dark .text-gray-900 {
+  @apply !text-white;
+}
+
+.dark .text-gray-800 {
+  @apply !text-gray-100;
+}
+
+.dark .text-gray-700 {
+  @apply !text-gray-200;
+}
+
+.dark .text-gray-600 {
+  @apply !text-gray-300;
+}
+
+.dark .text-gray-500 {
+  @apply !text-gray-400;
+}
+
+.dark .text-gray-400 {
+  @apply !text-gray-500;
+}
+
+/* Hover states */
+.dark .hover\:bg-gray-50:hover {
+  @apply !bg-slate-700;
+}
+
+.dark .hover\:bg-gray-100:hover {
+  @apply !bg-slate-600;
+}
+
+/* Focus states */
+.dark .focus\:ring-indigo-500:focus {
+  --tw-ring-color: var(--theme-primary);
+}
+
+.dark .focus\:border-indigo-500:focus {
+  border-color: var(--theme-primary);
+}
+
+/* Form inputs */
+.dark input,
+.dark select,
+.dark textarea {
+  @apply bg-slate-700 border-slate-600 text-white placeholder-gray-400;
+}
+
+.dark input:focus,
+.dark select:focus,
+.dark textarea:focus {
+  @apply border-indigo-500 ring-indigo-500;
+}
+
+/* Tables */
+.dark table {
+  @apply text-gray-200;
+}
+
+.dark thead {
+  @apply bg-slate-900;
+}
+
+.dark tbody {
+  @apply bg-slate-800;
+}
+
+.dark th {
+  @apply text-gray-400;
+}
+
+.dark td {
+  @apply text-gray-300;
+}
+
+.dark tr:hover {
+  @apply bg-slate-700;
+}
+
+/* Shadows for dark mode */
+.dark .shadow-sm {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+}
+
+.dark .shadow-md {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+}
+
+/* =========================================
+   UTILITY CLASSES
+   ========================================= */
+
+/* Dark mode scrollbars */
+.dark-scrollbars {
+  scrollbar-color: theme('colors.slate.600') theme('colors.slate.800');
+}
+
+/* Progress bar with theme color */
+.progress-bar {
+  background: linear-gradient(90deg, var(--theme-primary), var(--theme-secondary));
+}
+
+/* Primary button using theme colors */
+.btn-primary {
+  background: linear-gradient(135deg, var(--theme-primary), var(--theme-secondary));
+  color: white;
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+/* Focus ring with theme color */
+.focus-ring-primary:focus {
+  outline: 2px solid var(--theme-primary);
+  outline-offset: 2px;
+}
+
+/* Active state for navigation */
+.nav-active {
+  background: linear-gradient(135deg, var(--theme-primary), var(--theme-secondary));
+  color: white;
+}
+
+/* Link colors in dark mode */
+.dark .text-indigo-600 {
+  @apply !text-indigo-400;
+}
+
+.dark .text-blue-600 {
+  @apply !text-blue-400;
+}
+
+.dark .text-green-600 {
+  @apply !text-green-400;
+}
+
+.dark .text-red-600 {
+  @apply !text-red-400;
+}
+
+.dark .hover\:text-indigo-500:hover {
+  @apply !text-indigo-300;
+}
+
+.dark .hover\:text-blue-900:hover {
+  @apply !text-blue-300;
+}
+
+.dark .hover\:text-indigo-900:hover {
+  @apply !text-indigo-300;
+}
+
+.dark .hover\:text-red-900:hover {
+  @apply !text-red-300;
+}
+
+/* Flash messages in dark mode */
+.dark .bg-green-100 {
+  @apply !bg-green-900/30;
+}
+
+.dark .border-green-400 {
+  @apply !border-green-700;
+}
+
+.dark .text-green-700 {
+  @apply !text-green-300;
+}
+
+/* Pagination */
+.dark .bg-blue-600 {
+  background: var(--theme-primary);
+}
+
+.dark .border-blue-600 {
+  border-color: var(--theme-primary);
+}
+
+/* =========================================
+   BASE LAYER
+   ========================================= */
+
+@layer base {
+
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
+
+  .dark {
+    color-scheme: dark;
+  }
+}
