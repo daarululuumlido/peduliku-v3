@@ -35,6 +35,7 @@ export const useThemeStore = defineStore('theme', () => {
     const fontName = ref('Inter')
     const darkMode = ref(false)
     const colorPresetKey = ref('indigo')
+    const sidebarCollapsed = ref(false)
 
     // Computed
     const currentPreset = computed(() => colorPresets[colorPresetKey.value] || colorPresets.indigo)
@@ -69,6 +70,7 @@ export const useThemeStore = defineStore('theme', () => {
             fontName: fontName.value,
             darkMode: darkMode.value,
             colorPresetKey: colorPresetKey.value,
+            sidebarCollapsed: sidebarCollapsed.value,
         }
 
         localStorage.setItem(STORAGE_KEY, JSON.stringify(settings))
@@ -88,6 +90,7 @@ export const useThemeStore = defineStore('theme', () => {
                 fontName.value = settings.fontName || 'Inter'
                 darkMode.value = settings.darkMode || false
                 colorPresetKey.value = settings.colorPresetKey || 'indigo'
+                sidebarCollapsed.value = settings.sidebarCollapsed || false
             } catch (e) {
                 console.error('Failed to parse theme settings:', e)
             }
@@ -160,6 +163,18 @@ export const useThemeStore = defineStore('theme', () => {
         saveToStorage()
     }
 
+    // Toggle sidebar collapsed
+    function toggleSidebar() {
+        sidebarCollapsed.value = !sidebarCollapsed.value
+        saveToStorage()
+    }
+
+    // Set sidebar collapsed explicitly
+    function setSidebarCollapsed(value) {
+        sidebarCollapsed.value = value
+        saveToStorage()
+    }
+
     // Set dark mode explicitly
     function setDarkMode(value) {
         darkMode.value = value
@@ -188,6 +203,7 @@ export const useThemeStore = defineStore('theme', () => {
         fontName,
         darkMode,
         colorPresetKey,
+        sidebarCollapsed,
         // Computed
         currentPreset,
         // Methods
@@ -198,6 +214,8 @@ export const useThemeStore = defineStore('theme', () => {
         setFont,
         toggleDarkMode,
         setDarkMode,
+        toggleSidebar,
+        setSidebarCollapsed,
         resetToDefaults,
         applyTheme,
     }

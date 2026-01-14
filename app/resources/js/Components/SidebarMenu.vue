@@ -3,6 +3,13 @@ import { computed } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import { useThemeStore } from '@/stores/useThemeStore';
 
+const props = defineProps({
+    collapsed: {
+        type: Boolean,
+        default: false
+    }
+});
+
 const page = usePage();
 const themeStore = useThemeStore();
 
@@ -52,9 +59,12 @@ function getActiveStyle() {
         <template v-for="(item, index) in menu" :key="index">
             <!-- Group menu -->
             <div v-if="item.type === 'group'" class="mt-6">
-                <div class="flex items-center px-3 py-2 text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-slate-400">
+                <div v-if="!collapsed" class="flex items-center px-3 py-2 text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-slate-400">
                     <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" v-html="getIcon(item.icon)"></svg>
                     {{ item.label }}
+                </div>
+                <div v-else class="flex justify-center py-2">
+                    <div class="h-px w-8 bg-gray-300 dark:bg-slate-600"></div>
                 </div>
                 <div class="mt-1 space-y-1">
                     <Link
@@ -65,12 +75,14 @@ function getActiveStyle() {
                         :class="[
                             isActive(subItem.route)
                                 ? 'aside-menu-item-active shadow-md'
-                                : ''
+                                : '',
+                            collapsed ? 'justify-center' : ''
                         ]"
                         :style="isActive(subItem.route) ? getActiveStyle() : {}"
+                        :title="collapsed ? subItem.label : ''"
                     >
-                        <svg class="mr-3 h-5 w-5" :class="isActive(subItem.route) ? 'text-white' : 'text-gray-400 dark:text-slate-400'" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" v-html="getIcon(subItem.icon)"></svg>
-                        {{ subItem.label }}
+                        <svg class="h-5 w-5" :class="[isActive(subItem.route) ? 'text-white' : 'text-gray-400 dark:text-slate-400', collapsed ? '' : 'mr-3']" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" v-html="getIcon(subItem.icon)"></svg>
+                        <span v-if="!collapsed">{{ subItem.label }}</span>
                     </Link>
                 </div>
             </div>
@@ -83,13 +95,16 @@ function getActiveStyle() {
                 :class="[
                     isActive(item.route)
                         ? 'aside-menu-item-active shadow-md'
-                        : ''
+                        : '',
+                    collapsed ? 'justify-center' : ''
                 ]"
                 :style="isActive(item.route) ? getActiveStyle() : {}"
+                :title="collapsed ? item.label : ''"
             >
-                <svg class="mr-3 h-5 w-5" :class="isActive(item.route) ? 'text-white' : 'text-gray-400 dark:text-slate-400'" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" v-html="getIcon(item.icon)"></svg>
-                {{ item.label }}
+                <svg class="h-5 w-5" :class="[isActive(item.route) ? 'text-white' : 'text-gray-400 dark:text-slate-400', collapsed ? '' : 'mr-3']" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" v-html="getIcon(item.icon)"></svg>
+                <span v-if="!collapsed">{{ item.label }}</span>
             </Link>
         </template>
     </nav>
 </template>
+

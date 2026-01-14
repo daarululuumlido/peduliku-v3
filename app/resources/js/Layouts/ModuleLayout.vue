@@ -30,13 +30,26 @@ function openThemeSettings() {
         <!-- Sidebar -->
         <aside
             id="aside"
-            class="aside fixed inset-y-0 left-0 z-50 flex w-64 flex-col transform transition-all duration-300 ease-in-out lg:translate-x-0 lg:py-2 lg:pl-2"
-            :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
+            class="aside fixed inset-y-0 left-0 z-50 flex flex-col transform transition-all duration-300 ease-in-out lg:translate-x-0 lg:py-2 lg:pl-2"
+            :class="[
+                sidebarOpen ? 'translate-x-0' : '-translate-x-full',
+                themeStore.sidebarCollapsed ? 'w-20' : 'w-64'
+            ]"
         >
             <div class="aside flex flex-1 flex-col overflow-hidden lg:rounded-2xl">
                 <!-- Sidebar Header with Module Switcher -->
-                <div class="aside-brand flex h-14 items-center justify-between px-4">
-                    <ModuleSwitcher />
+                <div class="aside-brand flex h-14 items-center px-4" :class="themeStore.sidebarCollapsed ? 'justify-center' : 'justify-between'">
+                    <ModuleSwitcher v-if="!themeStore.sidebarCollapsed" />
+                    <!-- Toggle collapse button (desktop only) -->
+                    <button 
+                        @click="themeStore.toggleSidebar()"
+                        class="hidden rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-200 lg:block dark:text-slate-400 dark:hover:bg-slate-700"
+                        :title="themeStore.sidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'"
+                    >
+                        <svg class="h-5 w-5 transition-transform duration-300" :class="themeStore.sidebarCollapsed ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M18.75 19.5l-7.5-7.5 7.5-7.5m-6 15L5.25 12l7.5-7.5" />
+                        </svg>
+                    </button>
                     <!-- Close button for mobile -->
                     <button 
                         @click="sidebarOpen = false"
@@ -49,20 +62,21 @@ function openThemeSettings() {
                 </div>
 
                 <!-- Sidebar Menu -->
-                <SidebarMenu />
+                <SidebarMenu :collapsed="themeStore.sidebarCollapsed" />
 
                 <!-- Sidebar Footer -->
-                <div class="aside-brand flex items-center px-4 py-3">
-                    <div class="flex min-w-0 flex-1 items-center">
+                <div class="aside-brand flex items-center px-4 py-3" :class="themeStore.sidebarCollapsed ? 'justify-center' : ''">
+                    <div class="flex min-w-0 flex-1 items-center" :class="themeStore.sidebarCollapsed ? 'justify-center' : ''">
                         <div class="flex-shrink-0">
                             <div 
                                 class="flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium text-white"
                                 :style="{ background: `linear-gradient(135deg, ${themeStore.primaryColor}, ${themeStore.secondaryColor})` }"
+                                :title="themeStore.sidebarCollapsed ? $page.props.auth.user?.name : ''"
                             >
                                 {{ $page.props.auth.user?.name?.charAt(0)?.toUpperCase() || 'U' }}
                             </div>
                         </div>
-                        <div class="ml-3 min-w-0">
+                        <div v-if="!themeStore.sidebarCollapsed" class="ml-3 min-w-0">
                             <p class="truncate text-sm font-medium text-gray-900 dark:text-white">
                                 {{ $page.props.auth.user?.name }}
                             </p>
@@ -76,7 +90,7 @@ function openThemeSettings() {
         </aside>
 
         <!-- Main Content -->
-        <div class="lg:pl-64 lg:pt-2">
+        <div class="transition-all duration-300 lg:pt-2" :class="themeStore.sidebarCollapsed ? 'lg:pl-20' : 'lg:pl-64'">
             <!-- Top Navbar -->
             <header class="sticky top-0 z-30 flex h-14 items-center bg-white/80 px-4 shadow-sm backdrop-blur-md transition-all sm:px-6 lg:mx-2 lg:rounded-t-2xl lg:px-8 dark:bg-slate-800/80">
                 <!-- Mobile menu button -->
