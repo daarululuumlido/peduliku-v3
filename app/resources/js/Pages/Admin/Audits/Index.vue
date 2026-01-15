@@ -281,18 +281,26 @@ const formatChangedFields = (oldValues, newValues) => {
                     Menampilkan {{ audits.from }} sampai {{ audits.to }} dari {{ audits.total }} data
                 </div>
                 <div v-if="audits.links" class="flex gap-2">
-                    <Link
-                        v-for="(link, index) in audits.links"
-                        :key="index"
-                        :href="link.url"
-                        v-html="link.label"
-                        class="px-3 py-1 rounded border border-gray-300 text-sm dark:border-slate-600 dark:text-white"
-                        :class="{
-                            'bg-indigo-600 text-white border-indigo-600': link.active,
-                            'hover:bg-gray-50 dark:hover:bg-slate-700': link.url && !link.active,
-                            'opacity-50 cursor-not-allowed': !link.url
-                        }"
-                    />
+                    <template v-for="(link, index) in audits.links" :key="index">
+                        <Link
+                            v-if="link.url"
+                            :href="link.url"
+                            v-html="link.label"
+                            class="px-3 py-1 rounded border border-gray-300 text-sm dark:border-slate-600 dark:text-white"
+                            :class="{
+                                'bg-indigo-600 text-white border-indigo-600': link.active,
+                                'hover:bg-gray-50 dark:hover:bg-slate-700': link.url && !link.active,
+                            }"
+                        />
+                        <span
+                            v-else
+                            v-html="link.label"
+                            class="px-3 py-1 rounded border border-gray-300 text-sm opacity-50 cursor-not-allowed dark:border-slate-600 dark:text-white"
+                            :class="{
+                                'bg-indigo-600 text-white border-indigo-600': link.active,
+                            }"
+                        />
+                    </template>
                 </div>
             </div>
         </div>
