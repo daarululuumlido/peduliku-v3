@@ -145,13 +145,14 @@ watch(search, (value) => {
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                     {{ item.tempat_lahir }}, {{ new Date(item.tanggal_lahir).toLocaleDateString('id-ID') }}
                                 </td>
-                                <td class="px-6 py-4 text-sm text-gray-500 max-w-xs truncate dark:text-gray-400">
-                                    <template v-if="item.alamat_ktp">
-                                        {{ item.alamat_ktp.alamat_lengkap }}
-                                        <span v-if="item.alamat_ktp?.desa">
-                                            , {{ item.alamat_ktp.desa.name }}
-                                        </span>
-                                    </template>
+                                <td class="px-6 py-4">
+                                    <span
+                                        v-if="item.alamat_ktp"
+                                        class="text-sm text-gray-900 dark:text-white truncate block max-w-xs"
+                                        :title="item.alamat_ktp.full_address"
+                                    >
+                                        {{ item.alamat_ktp.desa?.name || '-' }}
+                                    </span>
                                     <span v-else class="text-gray-400 dark:text-gray-500">-</span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
