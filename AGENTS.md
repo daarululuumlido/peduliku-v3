@@ -17,6 +17,10 @@
 - `./vendor/bin/pint app/Console/Commands/SimpleSantriImportCommand.php` - Format single file
 - **Always run Pint after code changes**
 
+### Audit Log Management
+- `php artisan audit:cleanup` - Clean up audit logs older than retention period
+- `php artisan audit:cleanup --days=30` - Clean up logs older than 30 days
+
 ## Project Documentation
 
 Refer to `docs/` directory for project-specific documentation:
