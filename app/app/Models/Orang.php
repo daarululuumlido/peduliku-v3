@@ -18,6 +18,8 @@ class Orang extends Model
     protected $fillable = [
         'nik',
         'nama',
+        'gelar_depan',
+        'gelar_belakang',
         'gender',
         'tanggal_lahir',
         'tempat_lahir',
