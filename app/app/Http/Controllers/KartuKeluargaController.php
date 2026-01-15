@@ -202,6 +202,28 @@ class KartuKeluargaController extends Controller
     }
 
     /**
+     * Update member status hubungan in kartu keluarga.
+     */
+    public function updateMemberStatus(Request $request, KartuKeluarga $kartuKeluarga)
+    {
+        $validated = $request->validate([
+            'membership_id' => ['required', 'exists:kartu_keluarga_anggota,id'],
+            'status_hubungan' => ['required', 'in:'.implode(',', array_keys(KartuKeluargaAnggota::getStatusHubunganOptions()))],
+        ]);
+
+        $membership = KartuKeluargaAnggota::where('id', $validated['membership_id'])
+            ->where('kartu_keluarga_id', $kartuKeluarga->id)
+            ->firstOrFail();
+
+        $membership->update([
+            'status_hubungan' => $validated['status_hubungan'],
+        ]);
+
+        return redirect()->route('admin.kartu-keluarga.show', $kartuKeluarga)
+            ->with('message', 'Status hubungan berhasil diperbarui.');
+    }
+
+    /**
      * Search kartu keluarga for autocomplete.
      */
     public function search(Request $request)

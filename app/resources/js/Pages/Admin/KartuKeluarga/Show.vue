@@ -17,6 +17,29 @@ const selectedOrang = ref(null);
 const selectedStatusHubungan = ref('');
 const isSearching = ref(false);
 
+// Inline edit status hubungan
+const editingMembershipId = ref(null);
+
+const startEditStatus = (membershipId) => {
+    editingMembershipId.value = membershipId;
+};
+
+const cancelEditStatus = () => {
+    editingMembershipId.value = null;
+};
+
+const updateStatusHubungan = (membershipId, newStatus) => {
+    router.post(route('admin.kartu-keluarga.update-member-status', props.kartuKeluarga.id), {
+        membership_id: membershipId,
+        status_hubungan: newStatus,
+    }, {
+        preserveScroll: true,
+        onSuccess: () => {
+            editingMembershipId.value = null;
+        }
+    });
+};
+
 const deleteKK = () => {
     if (confirm(`Apakah Anda yakin ingin menghapus KK "${props.kartuKeluarga.no_kk}"?`)) {
         router.delete(route('admin.kartu-keluarga.destroy', props.kartuKeluarga.id));
@@ -302,7 +325,34 @@ const addMember = () => {
                                 <div>
                                     <p class="font-medium text-gray-900 dark:text-white">{{ membership.orang.nama }}</p>
                                     <p class="text-sm text-gray-500 font-mono dark:text-gray-400">{{ membership.orang.nik }}</p>
-                                    <p class="text-xs text-indigo-600 mt-1 dark:text-indigo-400">{{ formatStatusHubungan(membership.status_hubungan) }}</p>
+                                    <!-- Inline Status Edit -->
+                                    <div class="mt-1 group/status">
+                                        <!-- Edit Mode -->
+                                        <select
+                                            v-if="editingMembershipId === membership.id"
+                                            :value="membership.status_hubungan"
+                                            @change="updateStatusHubungan(membership.id, $event.target.value)"
+                                            @blur="cancelEditStatus"
+                                            class="text-xs pl-2 pr-6 py-1 bg-indigo-50 border border-indigo-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white cursor-pointer"
+                                            autofocus
+                                        >
+                                            <option v-for="(label, value) in statusHubunganOptions" :key="value" :value="value">
+                                                {{ label }}
+                                            </option>
+                                        </select>
+                                        <!-- View Mode -->
+                                        <button
+                                            v-else
+                                            @click="startEditStatus(membership.id)"
+                                            class="text-xs text-indigo-600 dark:text-indigo-400 inline-flex items-center gap-1 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors"
+                                            title="Klik untuk mengubah status"
+                                        >
+                                            {{ formatStatusHubungan(membership.status_hubungan) }}
+                                            <svg class="w-3 h-3 opacity-0 group-hover/status:opacity-60 transition-opacity" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                             <div class="flex items-center gap-3">

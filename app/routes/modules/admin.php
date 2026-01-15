@@ -33,6 +33,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'module:admin'])->gr
     Route::get('kartu-keluarga/search', [KartuKeluargaController::class, 'search'])->name('kartu-keluarga.search');
     Route::post('/kartu-keluarga/{kartuKeluarga}/add-member', [KartuKeluargaController::class, 'addMember'])->name('kartu-keluarga.add-member');
     Route::post('/kartu-keluarga/{kartuKeluarga}/remove-member', [KartuKeluargaController::class, 'removeMember'])->name('kartu-keluarga.remove-member');
+    Route::post('/kartu-keluarga/{kartuKeluarga}/update-member-status', [KartuKeluargaController::class, 'updateMemberStatus'])->name('kartu-keluarga.update-member-status');
     Route::resource('kartu-keluarga', KartuKeluargaController::class);
 
     // Settings Routes (Roles, Permissions, Users)
