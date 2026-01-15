@@ -68,8 +68,8 @@ class AuditController extends Controller
         $audit = Audit::with(['user', 'auditable'])
             ->findOrFail($id);
 
-        $oldValues = json_decode($audit->old_values, true) ?? [];
-        $newValues = json_decode($audit->new_values, true) ?? [];
+        $oldValues = $audit->old_values ?? [];
+        $newValues = $audit->new_values ?? [];
 
         return Inertia::render('Admin/Audits/Show', [
             'audit' => $audit,
