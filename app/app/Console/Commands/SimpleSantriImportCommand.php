@@ -7,6 +7,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Laravolt\Indonesia\Models\Village;
 
 class SimpleSantriImportCommand extends Command
 {
@@ -73,7 +74,6 @@ class SimpleSantriImportCommand extends Command
         DB::statement('DELETE FROM kartu_keluarga_anggota;');
         $this->info('Tables cleared.');
 
-
         // Prepare data arrays
         $peopleToInsert = [];
         $addressesToInsert = [];
@@ -103,14 +103,38 @@ class SimpleSantriImportCommand extends Command
 
             $validRecords++;
 
-            // Create address if available
             $alamatId = null;
-            if (! empty($santri['alamat_orangtua'])) {
+            $desaId = null;
+            $alamatLengkap = '';
+
+            // Process address data
+            if (! empty($santri['alamat_orangtua']) || ! empty($santri['desa'])) {
                 $alamatId = Str::uuid();
+                $alamatLengkap = $santri['alamat_orangtua'] ?? '';
+
+                // Try to find village by name
+                if (! empty($santri['desa'])) {
+                    $desaName = trim($santri['desa']);
+                    $village = Village::whereRaw('LOWER(name) = ?', [strtolower($desaName)])
+                        ->first();
+
+                    if ($village) {
+                        $desaId = $village->code;
+                    }
+                }
+
+                // Clean alamat_lengkap - remove desa, kabupaten, propinsi parts
+                $alamatLengkap = $this->cleanAlamatLengkap(
+                    $alamatLengkap,
+                    $santri['desa'] ?? '',
+                    $santri['kabupaten'] ?? '',
+                    $santri['propinsi'] ?? ''
+                );
+
                 $addressesToInsert[] = [
                     'id' => $alamatId,
-                    'desa_id' => null,
-                    'alamat_lengkap' => $santri['alamat_orangtua'],
+                    'desa_id' => $desaId,
+                    'alamat_lengkap' => $alamatLengkap,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ];
@@ -157,7 +181,7 @@ class SimpleSantriImportCommand extends Command
                 'tempat_lahir' => ! empty($santri['tempat_lahir']) ? $santri['tempat_lahir'] : 'TIDAK DIKETAHUI',
                 'nama_ibu_kandung' => ! empty($santri['nama_ibu']) ? $santri['nama_ibu'] : null,
                 'no_whatsapp' => ! empty($santri['handphone_ayah']) ? $santri['handphone_ayah'] : null,
-                'alamat_ktp_id' => null,
+                'alamat_ktp_id' => $alamatId,
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
@@ -187,7 +211,7 @@ class SimpleSantriImportCommand extends Command
                 'tempat_lahir' => ! empty($ayahTtl['tempat']) ? $ayahTtl['tempat'] : 'TIDAK DIKETAHUI',
                 'nama_ibu_kandung' => null,
                 'no_whatsapp' => ! empty($santri['nomor_ayah']) ? $santri['nomor_ayah'] : null,
-                'alamat_ktp_id' => null,
+                'alamat_ktp_id' => $alamatId,
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
@@ -217,7 +241,7 @@ class SimpleSantriImportCommand extends Command
                 'tempat_lahir' => ! empty($ibuTtl['tempat']) ? $ibuTtl['tempat'] : 'TIDAK DIKETAHUI',
                 'nama_ibu_kandung' => null,
                 'no_whatsapp' => ! empty($santri['nomor_ibu']) ? $santri['nomor_ibu'] : null,
-                'alamat_ktp_id' => null,
+                'alamat_ktp_id' => $alamatId,
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
@@ -269,7 +293,20 @@ class SimpleSantriImportCommand extends Command
         DB::beginTransaction();
 
         try {
-            // Insert people in batches
+            // Insert addresses FIRST (people depend on addresses)
+            if (! empty($addressesToInsert)) {
+                $this->info('Inserting addresses...');
+                collect($addressesToInsert)->chunk(100)->each(function ($chunk) {
+                    try {
+                        DB::table('alamat')->insert($chunk->toArray());
+                        $this->line('Inserted '.$chunk->count().' addresses');
+                    } catch (\Exception $e) {
+                        $this->error('Failed to insert addresses: '.$e->getMessage());
+                    }
+                });
+            }
+
+            // Insert people SECOND (after addresses exist)
             $this->info('Inserting people...');
             collect($peopleToInsert)->chunk(100)->each(function ($chunk) {
                 try {
@@ -279,18 +316,6 @@ class SimpleSantriImportCommand extends Command
                     $this->error('Failed to insert people: '.$e->getMessage());
                 }
             });
-
-            // Insert addresses
-            if (! empty($addressesToInsert)) {
-                $this->info('Inserting addresses...');
-                collect($addressesToInsert)->chunk(100)->each(function ($chunk) {
-                    try {
-                        DB::table('alamat')->insert($chunk->toArray());
-                    } catch (\Exception $e) {
-                        $this->error('Failed to insert addresses: '.$e->getMessage());
-                    }
-                });
-            }
 
             // Insert family cards
             if (! empty($familyCards)) {
@@ -307,18 +332,18 @@ class SimpleSantriImportCommand extends Command
             // Insert family members
             if (! empty($familyMembersToInsert)) {
                 $this->info('Creating family member relationships...');
-                
+
                 // Filter out family members with invalid kartu_keluarga_id
                 $validFamilyCards = collect($familyCards)->pluck('id')->toArray();
                 $filteredMembers = collect($familyMembersToInsert)->filter(function ($member) use ($validFamilyCards) {
                     return in_array($member['kartu_keluarga_id'], $validFamilyCards);
                 })->toArray();
-                
+
                 $skippedMembers = count($familyMembersToInsert) - count($filteredMembers);
                 if ($skippedMembers > 0) {
                     $this->warn("Skipped {$skippedMembers} family members with invalid kartu_keluarga_id");
                 }
-                
+
                 collect($filteredMembers)->chunk(100)->each(function ($chunk) {
                     try {
                         DB::table('kartu_keluarga_anggota')->insert($chunk->toArray());
@@ -457,5 +482,29 @@ class SimpleSantriImportCommand extends Command
         $serial = str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
 
         return $province.$regency.$district.$day.$month.$year.$serial;
+    }
+
+    private function cleanAlamatLengkap($alamat, $desa, $kabupaten, $propinsi)
+    {
+        $result = $alamat;
+
+        if (! empty($desa)) {
+            $desaClean = trim($desa);
+            $result = str_ireplace($desaClean, '', $result);
+        }
+
+        if (! empty($kabupaten)) {
+            $kabClean = trim($kabupaten);
+            $result = str_ireplace($kabClean, '', $result);
+            $result = str_ireplace('Kab. '.$kabClean, '', $result);
+            $result = str_ireplace('Kabupaten '.$kabClean, '', $result);
+        }
+
+        if (! empty($propinsi)) {
+            $provClean = trim($propinsi);
+            $result = str_ireplace($provClean, '', $result);
+        }
+
+        return trim($result, " ,.\t\n\r\0\x0B");
     }
 }
