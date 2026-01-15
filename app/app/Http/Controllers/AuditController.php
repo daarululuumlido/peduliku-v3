@@ -40,9 +40,9 @@ class AuditController extends Controller
         // Sort
         $sortField = $request->get('sort', 'created_at');
         $sortDirection = $request->get('direction', 'desc');
-        
+
         $validSortFields = ['created_at', 'event', 'auditable_type', 'user_id'];
-        
+
         if (in_array($sortField, $validSortFields)) {
             $query->orderBy($sortField, $sortDirection);
         }

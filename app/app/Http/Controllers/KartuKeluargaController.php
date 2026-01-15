@@ -33,9 +33,9 @@ class KartuKeluargaController extends Controller
         // Sort
         $sortField = $request->get('sort', 'created_at');
         $sortDirection = $request->get('direction', 'desc');
-        
+
         $validSortFields = ['no_kk', 'created_at', 'anggota_count'];
-        
+
         if (in_array($sortField, $validSortFields)) {
             if ($sortField === 'anggota_count') {
                 $query->withCount('anggota')->orderBy('anggota_count', $sortDirection);

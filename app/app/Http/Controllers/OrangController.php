@@ -39,9 +39,9 @@ class OrangController extends Controller
         // Sort
         $sortField = $request->get('sort', 'nama');
         $sortDirection = $request->get('direction', 'asc');
-        
+
         $validSortFields = ['nama', 'nik', 'gender', 'tanggal_lahir', 'created_at'];
-        
+
         if (in_array($sortField, $validSortFields)) {
             $query->orderBy($sortField, $sortDirection);
         } else {

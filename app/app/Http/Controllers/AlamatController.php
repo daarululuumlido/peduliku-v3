@@ -31,9 +31,9 @@ class AlamatController extends Controller
         // Sort
         $sortField = $request->get('sort', 'created_at');
         $sortDirection = $request->get('direction', 'desc');
-        
+
         $validSortFields = ['created_at', 'alamat_lengkap', 'orang_count', 'desa_name'];
-        
+
         if (in_array($sortField, $validSortFields)) {
             if ($sortField === 'desa_name') {
                 $query->orderBy('desa.name', $sortDirection);
