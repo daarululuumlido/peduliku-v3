@@ -64,7 +64,7 @@ watch(search, (value) => {
                     <input
                         type="text"
                         v-model="search"
-                        placeholder="Cari No. KK..."
+                        placeholder="Cari No. KK atau nama anggota..."
                         class="w-full md:w-96 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono dark:bg-slate-700 dark:border-slate-600 dark:text-white"
                     />
                 </div>
@@ -103,9 +103,26 @@ watch(search, (value) => {
                                     <span v-else class="text-gray-400 dark:text-gray-500">-</span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                   <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                                        {{ kk.anggota?.length || 0 }} Orang
-                                    </span>
+                                    <div class="relative group inline-block">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 cursor-pointer">
+                                            {{ kk.anggota?.length || 0 }} Orang
+                                        </span>
+                                        <!-- Tooltip (appears below) -->
+                                        <div 
+                                            v-if="kk.anggota && kk.anggota.length > 0"
+                                            class="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 whitespace-nowrap"
+                                        >
+                                            <!-- Tooltip Arrow (points up) -->
+                                            <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-[-7px]">
+                                                <div class="border-4 border-transparent border-b-gray-900"></div>
+                                            </div>
+                                            <div class="text-left">
+                                                <div v-for="member in kk.anggota" :key="member.id" class="py-0.5">
+                                                    {{ member.orang?.nama }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <Link

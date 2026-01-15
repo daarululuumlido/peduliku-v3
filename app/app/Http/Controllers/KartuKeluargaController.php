@@ -19,9 +19,15 @@ class KartuKeluargaController extends Controller
     {
         $query = KartuKeluarga::with(['alamat.desa.district.city.province', 'anggota.orang']);
 
-        // Search by no_kk
+        // Search by no_kk or anggota name
         if ($request->has('search') && $request->search) {
-            $query->where('no_kk', 'like', "%{$request->search}%");
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('no_kk', 'like', "%{$search}%")
+                    ->orWhereHas('anggota.orang', function ($sub) use ($search) {
+                        $sub->where('nama', 'like', "%{$search}%");
+                    });
+            });
         }
 
         $kartuKeluarga = $query->orderBy('created_at', 'desc')
@@ -84,6 +90,7 @@ class KartuKeluargaController extends Controller
 
         return Inertia::render('Admin/KartuKeluarga/Show', [
             'kartuKeluarga' => $kartuKeluarga,
+            'statusHubunganOptions' => KartuKeluargaAnggota::getStatusHubunganOptions(),
         ]);
     }
 

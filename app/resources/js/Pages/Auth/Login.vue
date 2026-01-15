@@ -21,8 +21,8 @@ defineProps({
 });
 
 const form = useForm({
-    email: '',
-    password: '',
+    email: 'admin@peduliku.local',
+    password: 'password',
     remember: false,
 });
 

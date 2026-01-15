@@ -19,6 +19,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'module:admin'])->gr
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
     // Orang (People) Management Routes
+    Route::get('/orang/search', [OrangController::class, 'search'])->name('orang.search');
     Route::get('/orang/trashed', [OrangController::class, 'trashed'])->name('orang.trashed');
     Route::post('/orang/{id}/restore', [OrangController::class, 'restore'])->name('orang.restore');
     Route::delete('/orang/{id}/force-delete', [OrangController::class, 'forceDelete'])->name('orang.force-delete');

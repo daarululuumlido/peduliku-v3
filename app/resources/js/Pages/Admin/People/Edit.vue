@@ -61,6 +61,15 @@ const submit = () => {
         forceFormData: true,
     });
 };
+
+// Format status_hubungan for display (e.g., "kepala_keluarga" -> "Kepala Keluarga")
+const formatStatusHubungan = (status) => {
+    if (!status) return '';
+    return status
+        .split('_')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ');
+};
 </script>
 
 <template>
@@ -220,6 +229,31 @@ const submit = () => {
                                 >
                                     {{ useNewKK ? 'Cari KK yang Sudah Ada' : 'Buat KK Baru (Draft)' }}
                                 </button>
+                            </div>
+
+                            <!-- Current Linked KK Display -->
+                            <div v-if="orang.kartu_keluarga_anggota && orang.kartu_keluarga_anggota.length > 0" class="mb-4">
+                                <label class="block text-sm font-medium text-gray-500 mb-2">KK yang Terhubung:</label>
+                                <div class="space-y-2">
+                                    <Link
+                                        v-for="membership in orang.kartu_keluarga_anggota"
+                                        :key="membership.id"
+                                        :href="route('admin.kartu-keluarga.show', membership.kartu_keluarga.id)"
+                                        class="flex items-center justify-between p-3 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition group border border-indigo-100"
+                                    >
+                                        <div>
+                                            <span class="font-mono text-indigo-700 group-hover:text-indigo-900">
+                                                {{ membership.kartu_keluarga.no_kk }}
+                                            </span>
+                                            <span v-if="membership.status_hubungan" class="text-sm text-indigo-600 ml-2">
+                                                ({{ formatStatusHubungan(membership.status_hubungan) }})
+                                            </span>
+                                        </div>
+                                        <svg class="w-5 h-5 text-indigo-400 group-hover:text-indigo-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                                        </svg>
+                                    </Link>
+                                </div>
                             </div>
 
                             <div v-if="!useNewKK" class="space-y-4">

@@ -93,7 +93,7 @@ class AlamatController extends Controller
     {
         $validated = $request->validate([
             'alamat_lengkap' => ['nullable', 'string'],
-            'desa_id' => ['nullable', 'string', 'exists:indonesia_villages,id'],
+            'desa_id' => ['nullable', 'string', 'exists:indonesia_villages,code'],
         ]);
 
         $alamat->update($validated);

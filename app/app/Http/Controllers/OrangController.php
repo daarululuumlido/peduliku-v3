@@ -287,4 +287,19 @@ class OrangController extends Controller
         return redirect()->route('admin.orang.trashed')
             ->with('message', 'Data orang berhasil dihapus permanen.');
     }
+
+    /**
+     * Search orang for autocomplete.
+     */
+    public function search(Request $request)
+    {
+        $search = $request->get('query', '');
+
+        $results = Orang::where('nama', 'like', "%{$search}%")
+            ->orWhere('nik', 'like', "%{$search}%")
+            ->limit(10)
+            ->get(['id', 'nama', 'nik']);
+
+        return response()->json($results);
+    }
 }

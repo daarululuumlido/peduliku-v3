@@ -64,7 +64,7 @@ class Orang extends Model
     {
         $keanggotaan = $this->keanggotaanKeluargaSaatIni();
 
-        return $keanggotaan ? $keanggotaan->status_hubungan_label : null;
+        return $keanggotaan ? $keanggotaan->status_hubungan : null;
     }
 
     /**

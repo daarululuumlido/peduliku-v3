@@ -17,6 +17,26 @@
 - `./vendor/bin/pint app/Console/Commands/SimpleSantriImportCommand.php` - Format single file
 - **Always run Pint after code changes**
 
+## Project Documentation
+
+Refer to `docs/` directory for project-specific documentation:
+
+| Document | Path | Purpose |
+|----------|------|---------|
+| **Project Introduction** | `docs/intro.md` | Roadmap, current focus, ERD overview |
+| **Tech Stack** | `docs/tech-stack.md` | Architecture, technologies, why Inertia+Vue |
+| **Design Decisions** | `docs/design-decisions.md` | Tenancy model, address data strategy, auth config, org hierarchy |
+| **Phase 1** | `docs/fase/fase-1-fondasi.md` | Foundation, auth, people management (CURRENT FOCUS) |
+| **Phase 2** | `docs/fase/fase-2-hris.md` | HRIS, employee management, organization structure |
+| **Phase 3** | `docs/fase/fase-3-santri.md` | Student management, wali relationships, academics |
+
+**Important Context:**
+- Single-tenancy architecture (1 pesantren = 1 app)
+- Address data: Use Laravolt Indonesia package (84K+ desa data)
+- Organization hierarchy: Dynamic via database (self-referencing `unit_organisasi`)
+- Authentication: Google OAuth primary, password/WhatsApp configurable
+- NIP: Manual input, flexible format, unique constraint
+
 ## PHP/Laravel Guidelines
 
 ### Imports and Namespaces
