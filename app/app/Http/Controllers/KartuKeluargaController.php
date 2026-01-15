@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Alamat;
 use App\Models\KartuKeluarga;
+use App\Models\KartuKeluargaAnggota;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -16,7 +17,7 @@ class KartuKeluargaController extends Controller
      */
     public function index(Request $request): Response
     {
-        $query = KartuKeluarga::with(['alamat.desa.district.city.province', 'anggota']);
+        $query = KartuKeluarga::with(['alamat.desa.district.city.province', 'anggota.orang']);
 
         // Search by no_kk
         if ($request->has('search') && $request->search) {
@@ -57,7 +58,7 @@ class KartuKeluargaController extends Controller
         $alamatId = $validated['alamat_id'] ?? null;
 
         // If no existing address selected, create new if details provided
-        if (!$alamatId && ($validated['desa_id'] || $validated['alamat_lengkap'])) {
+        if (! $alamatId && ($validated['desa_id'] || $validated['alamat_lengkap'])) {
             $alamat = Alamat::create([
                 'desa_id' => $validated['desa_id'] ?? null,
                 'alamat_lengkap' => $validated['alamat_lengkap'] ?? null,
@@ -79,7 +80,7 @@ class KartuKeluargaController extends Controller
      */
     public function show(KartuKeluarga $kartuKeluarga): Response
     {
-        $kartuKeluarga->load(['alamat.desa.district.city.province', 'anggota']);
+        $kartuKeluarga->load(['alamat.desa.district.city.province', 'anggota.orang']);
 
         return Inertia::render('Admin/KartuKeluarga/Show', [
             'kartuKeluarga' => $kartuKeluarga,
@@ -151,18 +152,25 @@ class KartuKeluargaController extends Controller
     }
 
     /**
-     * Add member to kartu keluarga.
+     * Add member to kartu keluarga with relationship.
      */
     public function addMember(Request $request, KartuKeluarga $kartuKeluarga)
     {
         $validated = $request->validate([
             'orang_id' => ['required', 'exists:orang,id'],
+            'status_hubungan' => ['required', 'in:'.implode(',', array_keys(KartuKeluargaAnggota::getStatusHubunganOptions()))],
         ]);
 
-        // Update orang's kartu_keluarga_id
-        $kartuKeluarga->anggota()->where('id', $validated['orang_id'])->update([
-            'kartu_keluarga_id' => $kartuKeluarga->id,
-        ]);
+        // Add to relationship table
+        KartuKeluargaAnggota::updateOrCreate(
+            [
+                'kartu_keluarga_id' => $kartuKeluarga->id,
+                'orang_id' => $validated['orang_id'],
+            ],
+            [
+                'status_hubungan' => $validated['status_hubungan'],
+            ]
+        );
 
         return redirect()->route('admin.kartu-keluarga.show', $kartuKeluarga)
             ->with('message', 'Anggota berhasil ditambahkan.');
@@ -177,10 +185,10 @@ class KartuKeluargaController extends Controller
             'orang_id' => ['required', 'exists:orang,id'],
         ]);
 
-        // Remove orang from kartu keluarga
-        $kartuKeluarga->anggota()->where('id', $validated['orang_id'])->update([
-            'kartu_keluarga_id' => null,
-        ]);
+        // Remove from relationship table
+        KartuKeluargaAnggota::where('kartu_keluarga_id', $kartuKeluarga->id)
+            ->where('orang_id', $validated['orang_id'])
+            ->delete();
 
         return redirect()->route('admin.kartu-keluarga.show', $kartuKeluarga)
             ->with('message', 'Anggota berhasil dihapus dari KK.');
@@ -193,9 +201,9 @@ class KartuKeluargaController extends Controller
     {
         $search = $request->get('query');
 
-        $query = KartuKeluarga::with(['alamat.desa.district.city.province', 'kepalaKeluarga'])
+        $query = KartuKeluarga::with(['alamat.desa.district.city.province', 'anggota.orang'])
             ->where('no_kk', 'like', "%{$search}%");
-        
+
         // Optional: Also search by head of family name
         $query->orWhereHas('kepalaKeluarga', function ($q) use ($search) {
             $q->where('nama', 'like', "%{$search}%");
@@ -204,13 +212,13 @@ class KartuKeluargaController extends Controller
         $results = $query->limit(10)->get();
 
         $formatted = $results->map(function ($item) {
-            $kepala = $item->kepalaKeluarga ? " - " . $item->kepalaKeluarga->nama : "";
-            $alamat = $item->alamat ? $item->alamat->full_address : "Alamat tidak tersedia";
-            
+            $kepala = $item->kepalaKeluarga ? ' - '.$item->kepalaKeluarga->nama : '';
+            $alamat = $item->alamat ? $item->alamat->full_address : 'Alamat tidak tersedia';
+
             return [
                 'id' => $item->id,
                 'no_kk' => $item->no_kk,
-                'text' => $item->no_kk . $kepala,
+                'text' => $item->no_kk.$kepala,
                 'preview' => $alamat,
                 'alamat_id' => $item->alamat_id, // Useful to inherit address
             ];

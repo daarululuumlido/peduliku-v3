@@ -20,7 +20,7 @@ class OrangController extends Controller
      */
     public function index(Request $request): Response
     {
-        $query = Orang::with(['alamatKtp.desa.district.city.province', 'kartuKeluarga']);
+        $query = Orang::with(['alamatKtp.desa.district.city.province', 'kartuKeluargaAnggota.kartuKeluarga']);
 
         // Search by name or NIK
         if ($request->has('search') && $request->search) {
@@ -71,6 +71,7 @@ class OrangController extends Controller
             'alamat_lengkap' => ['nullable', 'required_without:alamat_id', 'string'],
             'desa_id' => ['nullable', 'required_without:alamat_id', 'string', 'exists:indonesia_villages,code'],
             'kartu_keluarga_id' => ['nullable', 'exists:kartu_keluarga,id'],
+            'status_hubungan' => ['nullable', 'in:'.implode(',', array_keys(\App\Models\KartuKeluargaAnggota::getStatusHubunganOptions()))],
             'new_no_kk' => ['nullable', 'string', 'size:16', 'unique:kartu_keluarga,no_kk'],
             'dokumen.*' => ['nullable', 'file', 'max:10240'], // Max 10MB per file
         ]);
@@ -89,7 +90,7 @@ class OrangController extends Controller
 
         // Handle Kartu Keluarga
         $kkId = $validated['kartu_keluarga_id'] ?? null;
-        if (!$kkId && !empty($validated['new_no_kk'])) {
+        if (! $kkId && ! empty($validated['new_no_kk'])) {
             $kk = KartuKeluarga::create([
                 'no_kk' => $validated['new_no_kk'],
                 'alamat_id' => $alamatId, // Default new KK address to person's address
@@ -107,8 +108,16 @@ class OrangController extends Controller
             'nama_ibu_kandung' => $validated['nama_ibu_kandung'] ?? null,
             'no_whatsapp' => $validated['no_whatsapp'] ?? null,
             'alamat_ktp_id' => $alamatId,
-            'kartu_keluarga_id' => $kkId,
         ]);
+
+        // Handle Kartu Keluarga relationship if provided
+        if ($kkId && ! empty($validated['status_hubungan'])) {
+            \App\Models\KartuKeluargaAnggota::create([
+                'kartu_keluarga_id' => $kkId,
+                'orang_id' => $orang->id,
+                'status_hubungan' => $validated['status_hubungan'],
+            ]);
+        }
 
         // Handle document uploads
         if ($request->hasFile('dokumen')) {
@@ -126,7 +135,7 @@ class OrangController extends Controller
      */
     public function show(Orang $orang): Response
     {
-        $orang->load(['alamatKtp.desa.district.city.province', 'kartuKeluarga.alamat', 'dokumen']);
+        $orang->load(['alamatKtp.desa.district.city.province', 'kartuKeluargaAnggota.kartuKeluarga.alamat', 'dokumen']);
 
         return Inertia::render('Admin/People/Show', [
             'orang' => $orang,
@@ -138,7 +147,7 @@ class OrangController extends Controller
      */
     public function edit(Orang $orang): Response
     {
-        $orang->load(['alamatKtp.desa.district.city.province', 'kartuKeluarga']);
+        $orang->load(['alamatKtp.desa.district.city.province', 'kartuKeluargaAnggota.kartuKeluarga']);
 
         return Inertia::render('Admin/People/Edit', [
             'orang' => $orang,
@@ -162,6 +171,7 @@ class OrangController extends Controller
             'alamat_lengkap' => ['nullable', 'required_without:alamat_id', 'string'],
             'desa_id' => ['nullable', 'required_without:alamat_id', 'string', 'exists:indonesia_villages,code'],
             'kartu_keluarga_id' => ['nullable', 'exists:kartu_keluarga,id'],
+            'status_hubungan' => ['nullable', 'in:'.implode(',', array_keys(\App\Models\KartuKeluargaAnggota::getStatusHubunganOptions()))],
             'new_no_kk' => ['nullable', 'string', 'size:16', 'unique:kartu_keluarga,no_kk'],
             'dokumen.*' => ['nullable', 'file', 'max:10240'], // Max 10MB per file
         ]);
@@ -178,18 +188,32 @@ class OrangController extends Controller
             $orang->alamat_ktp_id = $alamat->id;
         }
 
-        // Handle KK update
+        // Handle KK relationship update
+        $kkId = null;
         if (isset($validated['kartu_keluarga_id']) && $validated['kartu_keluarga_id']) {
-            $orang->kartu_keluarga_id = $validated['kartu_keluarga_id'];
-        } elseif (!empty($validated['new_no_kk'])) {
+            $kkId = $validated['kartu_keluarga_id'];
+        } elseif (! empty($validated['new_no_kk'])) {
             $kk = KartuKeluarga::create([
                 'no_kk' => $validated['new_no_kk'],
                 'alamat_id' => $orang->alamat_ktp_id, // Default to person's address
             ]);
-            $orang->kartu_keluarga_id = $kk->id;
-        } elseif (array_key_exists('kartu_keluarga_id', $validated) && $validated['kartu_keluarga_id'] === null) {
-             // If expressly sent as null, clear it
-             $orang->kartu_keluarga_id = null;
+            $kkId = $kk->id;
+        }
+
+        // Update KartuKeluargaAnggota relationship
+        if ($kkId && ! empty($validated['status_hubungan'])) {
+            \App\Models\KartuKeluargaAnggota::updateOrCreate(
+                [
+                    'orang_id' => $orang->id,
+                    'kartu_keluarga_id' => $kkId,
+                ],
+                [
+                    'status_hubungan' => $validated['status_hubungan'],
+                ]
+            );
+        } elseif (isset($kkId) && $kkId === null) {
+            // Remove all KK relationships if expressly set to null
+            \App\Models\KartuKeluargaAnggota::where('orang_id', $orang->id)->delete();
         }
 
         $orang->update([
@@ -201,7 +225,6 @@ class OrangController extends Controller
             'nama_ibu_kandung' => $validated['nama_ibu_kandung'] ?? null,
             'no_whatsapp' => $validated['no_whatsapp'] ?? null,
             'alamat_ktp_id' => $orang->alamat_ktp_id,
-            'kartu_keluarga_id' => $orang->kartu_keluarga_id,
         ]);
 
         // Handle document uploads
