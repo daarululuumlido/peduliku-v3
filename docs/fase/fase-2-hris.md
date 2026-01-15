@@ -21,7 +21,7 @@ Fitur ini memungkinkan pesantren mengubah struktur organisasi (misal: memecah di
 | Tabel | Kolom | Fungsi |
 |-------|-------|--------|
 | `struktur_organisasi` | `id`, `nama_periode`, `tgl_mulai`, `tgl_selesai`, `is_active` | Wadah utama. Hanya satu periode yang boleh `is_active = 1` |
-| `unit_organisasi` | `id`, `struktur_id` (FK), `parent_id` (Self-join), `nama_unit`, `kode_unit`, `level_hierarki` | Menyimpan hierarki (Yayasan → Pendidikan → SMA → Tata Usaha) |
+| `unit_organisasi` | `id`, `struktur_id` (FK), `parent_id` (Self-join), `nama_unit`, `kode_unit`, `level_hierarki`, `urutan` | Menyimpan hierarki (Yayasan → Pendidikan → SMA → Tata Usaha). `kode_unit` untuk kode seperti "TMI", "SMA-IT". `urutan` untuk sorting display |
 | `master_jabatan` | `id`, `unit_organisasi_id` (FK), `nama_jabatan`, `is_pimpinan`, `kuota_sdm` | Posisi spesifik yang tersedia dalam unit tersebut |
 
 ### B. Kebutuhan Fungsional (Fitur)
@@ -41,8 +41,18 @@ Mengaktifkan peran pegawai pada data orang yang sudah ada.
 
 | Tabel | Kolom | Fungsi |
 |-------|-------|--------|
-| `peran_pegawai` | `id`, `orang_id` (FK), `nip`, `tgl_bergabung`, `tmt` (Terhitung Mulai Tugas), `status_kepegawaian` (Tetap/Kontrak/Honorer), `status_mukim` (Mukim/Non-Mukim), `alamat_domisili_id` (FK ke `alamat`), `is_pengajar` (boolean), `nfc_id`, `finger_id`, `email_internal`, `no_rekening`, `nuptk`, `tgl_resign` (nullable), `is_active` | Data kepegawaian lengkap |
-| `histori_jabatan_pegawai` | `id`, `peran_pegawai_id`, `master_jabatan_id` (FK), `no_sk`, `tgl_mulai`, `tgl_selesai`, `keterangan_mutasi` | Mencatat perjalanan karir (Mutasi, Promosi, Demosi) |
+| `peran_pegawai` | `id`, `orang_id` (FK), `nip`, `tgl_bergabung`, `tmt`, `status_kepegawaian`, `status_mukim`, `alamat_domisili_id` (FK), `is_pengajar`, `nfc_id`, `finger_id`, `email_internal`, `no_rekening`, `nuptk`, `foto_url`, `tgl_resign`, `is_active` | Data kepegawaian lengkap. `foto_url` untuk foto pegawai |
+| `histori_jabatan_pegawai` | `id`, `peran_pegawai_id`, `master_jabatan_id` (FK), `spesialisasi`, `no_sk`, `tgl_mulai`, `tgl_selesai`, `keterangan_mutasi`, `is_jabatan_fungsional` | Mencatat perjalanan karir. `spesialisasi` untuk bidang keahlian (misal: "program management pendidikan islam"). `is_jabatan_fungsional = true` untuk jabatan seperti Wali Kamar, Wali Kelas (bisa multiple record per pegawai) |
+
+### Penjelasan Status Kepegawaian
+
+| Status | Keterangan |
+|--------|------------|
+| `Guru Tetap` | Guru dengan status tetap |
+| `Guru Kontrak` | Guru dengan kontrak waktu tertentu |
+| `Karyawan Tetap` | Karyawan non-pengajar dengan status tetap |
+| `Karyawan Kontrak` | Karyawan non-pengajar dengan kontrak |
+| `Honorer` | Pegawai honorer |
 
 ### B. Kebutuhan Fungsional (Fitur)
 
@@ -62,9 +72,10 @@ Mencatat detail kehidupan pegawai yang mempengaruhi HR, termasuk fitur **Custom 
 
 | Tabel | Kolom | Fungsi |
 |-------|-------|--------|
-| `riwayat_pendidikan` | `jenjang` (SD/SMP/SMA/S1/S2), `institusi`, `jurusan`, `tahun_lulus`, `nilai_akhir` | Riwayat pendidikan formal |
-| `riwayat_keluarga_pegawai` | `status` (Menikah/Cerai/Lajang), `nama_pasangan`, `jumlah_anak`, `tgl_perubahan_status` | Mencatat sejarah status pernikahan |
-| `catatan_kepegawaian` | `id`, `peran_pegawai_id`, `kategori` (ENUM), `judul`, `deskripsi`, `tgl_kejadian`, `poin` | Generic log / Custom Attributes |
+| `riwayat_pendidikan` | `id`, `orang_id` (FK), `jenjang`, `institusi`, `jurusan`, `tahun_masuk`, `tahun_lulus`, `nilai_akhir`, `no_ijazah` | Riwayat pendidikan formal. Jenjang: SD/SMP/SMA/D1/D2/D3/S1/S2/S3/Pesantren/Lainnya |
+| `riwayat_keluarga_pegawai` | `id`, `peran_pegawai_id`, `status`, `nama_pasangan`, `jumlah_anak`, `tgl_perubahan_status`, `keterangan` | Status: Lajang/Menikah/Cerai Hidup/Cerai Mati |
+| `riwayat_ibadah` | `id`, `peran_pegawai_id`, `jenis`, `tanggal_rencana`, `tanggal_berangkat`, `status`, `keterangan` | **TABEL BARU** untuk tracking Umroh/Haji. `jenis`: UMROH/HAJI. `status`: RENCANA/SUDAH |
+| `catatan_kepegawaian` | `id`, `peran_pegawai_id`, `kategori`, `judul`, `deskripsi`, `tgl_kejadian`, `poin` | Generic log untuk prestasi, pelanggaran, kesehatan, dll |
 
 ### Kategori Catatan Kepegawaian
 
@@ -72,9 +83,10 @@ Mencatat detail kehidupan pegawai yang mempengaruhi HR, termasuk fitur **Custom 
 |----------|-------------------|
 | `PRESTASI` | Penghargaan, sertifikasi |
 | `PELANGGARAN` | SP 1, SP 2, SP 3 |
-| `IBADAH` | Izin Umroh, Haji |
 | `KESEHATAN` | Cuti sakit panjang |
 | `LAINNYA` | Catatan lain-lain |
+
+> **Note**: Untuk data Umroh/Haji sekarang menggunakan tabel `riwayat_ibadah` yang terpisah agar lebih mudah di-filter dan tracking status (RENCANA/SUDAH).
 
 ### B. Kebutuhan Fungsional (Fitur)
 
@@ -126,7 +138,7 @@ flowchart TD
 | Timeline | Kejadian | Aksi |
 |----------|----------|------|
 | Bulan depan | Pegawai terlambat | Input ke `catatan_kepegawaian` → SP 1 |
-| Tahun depan | Pegawai Umroh | Input ke `catatan_kepegawaian` → Izin Umroh |
+| Tahun depan | Pegawai Umroh | Input ke `riwayat_ibadah` → jenis UMROH, status SUDAH |
 | Tahun depannya lagi | Promosi | Update jabatan → "Kepala Sekolah" (Mutasi) |
 
 ---
@@ -155,6 +167,7 @@ flowchart TD
 ### MODUL 2.3: Riwayat & Catatan
 - [ ] CRUD Riwayat Pendidikan
 - [ ] CRUD Riwayat Keluarga
+- [ ] CRUD Riwayat Ibadah (Umroh/Haji)
 - [ ] CRUD Catatan Kepegawaian (Custom Event Logger)
 
 ### MODUL 2.4: Dokumen
