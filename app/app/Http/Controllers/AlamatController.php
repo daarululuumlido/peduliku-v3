@@ -28,13 +28,27 @@ class AlamatController extends Controller
             });
         }
 
-        $alamat = $query->latest()
-            ->paginate(10)
-            ->withQueryString();
+        // Sort
+        $sortField = $request->get('sort', 'created_at');
+        $sortDirection = $request->get('direction', 'desc');
+        
+        $validSortFields = ['created_at', 'alamat_lengkap', 'orang_count', 'desa_name'];
+        
+        if (in_array($sortField, $validSortFields)) {
+            if ($sortField === 'desa_name') {
+                $query->orderBy('desa.name', $sortDirection);
+            } elseif ($sortField === 'orang_count') {
+                $query->orderBy('orang_count', $sortDirection);
+            } else {
+                $query->orderBy($sortField, $sortDirection);
+            }
+        }
+
+        $alamat = $query->paginate(10)->withQueryString();
 
         return Inertia::render('Admin/Alamat/Index', [
             'alamat' => $alamat,
-            'filters' => $request->only(['search']),
+            'filters' => $request->only(['search', 'sort', 'direction']),
         ]);
     }
 

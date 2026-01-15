@@ -14,6 +14,8 @@ const event = ref(props.filters.event || '');
 const auditableType = ref(props.filters.auditable_type || '');
 const dateFrom = ref(props.filters.date_from || '');
 const dateTo = ref(props.filters.date_to || '');
+const sort = ref(props.filters.sort || 'created_at');
+const direction = ref(props.filters.direction || 'desc');
 
 const applyFilters = () => {
     router.get(route('admin.audits.index'), {
@@ -21,10 +23,27 @@ const applyFilters = () => {
         auditable_type: auditableType.value || undefined,
         date_from: dateFrom.value || undefined,
         date_to: dateTo.value || undefined,
+        sort: sort.value,
+        direction: direction.value,
     }, {
         preserveState: true,
         replace: true,
     });
+};
+
+const handleSort = (field) => {
+    if (sort.value === field) {
+        direction.value = direction.value === 'asc' ? 'desc' : 'asc';
+    } else {
+        sort.value = field;
+        direction.value = 'desc';
+    }
+    applyFilters();
+};
+
+const getSortIcon = (field) => {
+    if (sort.value !== field) return null;
+    return direction.value === 'asc' ? '↑' : '↓';
 };
 
 const resetFilters = () => {
@@ -32,6 +51,8 @@ const resetFilters = () => {
     auditableType.value = '';
     dateFrom.value = '';
     dateTo.value = '';
+    sort.value = 'created_at';
+    direction.value = 'desc';
     applyFilters();
 };
 
@@ -67,15 +88,15 @@ const getEventLabel = (eventType) => {
 
 const getAuditableLabel = (type) => {
     switch (type) {
-        case 'App\Models\Orang':
+        case 'App\\Models\\Orang':
             return 'Orang';
-        case 'App\Models\KartuKeluarga':
+        case 'App\\Models\\KartuKeluarga':
             return 'Kartu Keluarga';
-        case 'App\Models\KartuKeluargaAnggota':
+        case 'App\\Models\\KartuKeluargaAnggota':
             return 'Anggota KK';
-        case 'App\Models\Alamat':
+        case 'App\\Models\\Alamat':
             return 'Alamat';
-        case 'App\Models\User':
+        case 'App\\Models\\User':
             return 'User';
         default:
             return type;
@@ -193,17 +214,35 @@ const formatChangedFields = (oldValues, newValues) => {
                 <table class="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
                     <thead class="bg-gray-50 dark:bg-slate-900">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
-                                Tanggal
+                            <th 
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800"
+                                @click="handleSort('created_at')"
+                            >
+                                <div class="flex items-center gap-1">
+                                    Tanggal
+                                    <span v-if="sort === 'created_at'" class="text-indigo-600 dark:text-indigo-400">{{ getSortIcon('created_at') }}</span>
+                                </div>
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
                                 User
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
-                                Event
+                            <th 
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800"
+                                @click="handleSort('event')"
+                            >
+                                <div class="flex items-center gap-1">
+                                    Event
+                                    <span v-if="sort === 'event'" class="text-indigo-600 dark:text-indigo-400">{{ getSortIcon('event') }}</span>
+                                </div>
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
-                                Model
+                            <th 
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800"
+                                @click="handleSort('auditable_type')"
+                            >
+                                <div class="flex items-center gap-1">
+                                    Model
+                                    <span v-if="sort === 'auditable_type'" class="text-indigo-600 dark:text-indigo-400">{{ getSortIcon('auditable_type') }}</span>
+                                </div>
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
                                 Perubahan

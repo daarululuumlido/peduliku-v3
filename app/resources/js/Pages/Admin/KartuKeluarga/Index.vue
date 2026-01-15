@@ -9,6 +9,34 @@ const props = defineProps({
 });
 
 const search = ref(props.filters.search || '');
+const sort = ref(props.filters.sort || 'created_at');
+const direction = ref(props.filters.direction || 'desc');
+
+const applyFilters = () => {
+    router.get(route('admin.kartu-keluarga.index'), {
+        search: search.value,
+        sort: sort.value,
+        direction: direction.value,
+    }, {
+        preserveState: true,
+        replace: true,
+    });
+};
+
+const handleSort = (field) => {
+    if (sort.value === field) {
+        direction.value = direction.value === 'asc' ? 'desc' : 'asc';
+    } else {
+        sort.value = field;
+        direction.value = 'asc';
+    }
+    applyFilters();
+};
+
+const getSortIcon = (field) => {
+    if (sort.value !== field) return null;
+    return direction.value === 'asc' ? '↑' : '↓';
+};
 
 const deleteKK = (id, noKK) => {
     if (confirm(`Apakah Anda yakin ingin menghapus KK "${noKK}"?`)) {
@@ -21,10 +49,7 @@ let searchTimeout = null;
 watch(search, (value) => {
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(() => {
-        router.get(route('admin.kartu-keluarga.index'), { search: value }, {
-            preserveState: true,
-            replace: true,
-        });
+        applyFilters();
     }, 300);
 });
 </script>
@@ -74,14 +99,35 @@ watch(search, (value) => {
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
                         <thead class="bg-gray-50 dark:bg-slate-900">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
-                                    No. KK
+                                <th 
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800"
+                                    @click="handleSort('no_kk')"
+                                >
+                                    <div class="flex items-center gap-1">
+                                        No. KK
+                                        <span v-if="sort === 'no_kk'" class="text-indigo-600 dark:text-indigo-400">{{ getSortIcon('no_kk') }}</span>
+                                    </div>
                                 </th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
                                     Alamat
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
-                                    Jumlah Anggota
+                                <th 
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800"
+                                    @click="handleSort('anggota_count')"
+                                >
+                                    <div class="flex items-center gap-1">
+                                        Jumlah Anggota
+                                        <span v-if="sort === 'anggota_count'" class="text-indigo-600 dark:text-indigo-400">{{ getSortIcon('anggota_count') }}</span>
+                                    </div>
+                                </th>
+                                <th 
+                                    class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800"
+                                    @click="handleSort('created_at')"
+                                >
+                                    <div class="flex items-center justify-center gap-1">
+                                        Dibuat
+                                        <span v-if="sort === 'created_at'" class="text-indigo-600 dark:text-indigo-400">{{ getSortIcon('created_at') }}</span>
+                                    </div>
                                 </th>
                                 <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
                                     Aksi
@@ -124,6 +170,9 @@ watch(search, (value) => {
                                         </div>
                                     </div>
                                 </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500 dark:text-gray-400">
+                                    {{ new Date(kk.created_at).toLocaleDateString('id-ID') }}
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <Link
                                         :href="route('admin.kartu-keluarga.show', kk.id)"
@@ -146,7 +195,7 @@ watch(search, (value) => {
                                 </td>
                             </tr>
                             <tr v-if="kartuKeluarga.data.length === 0">
-                                <td colspan="4" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                                <td colspan="5" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
                                     Tidak ada data kartu keluarga.
                                 </td>
                             </tr>

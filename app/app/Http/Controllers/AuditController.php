@@ -37,9 +37,17 @@ class AuditController extends Controller
             $query->where('created_at', '<=', $request->date_to);
         }
 
-        $audits = $query->orderBy('created_at', 'desc')
-            ->paginate(20)
-            ->withQueryString();
+        // Sort
+        $sortField = $request->get('sort', 'created_at');
+        $sortDirection = $request->get('direction', 'desc');
+        
+        $validSortFields = ['created_at', 'event', 'auditable_type', 'user_id'];
+        
+        if (in_array($sortField, $validSortFields)) {
+            $query->orderBy($sortField, $sortDirection);
+        }
+
+        $audits = $query->paginate(20)->withQueryString();
 
         $auditableTypes = Audit::select('auditable_type')
             ->distinct()
@@ -57,7 +65,7 @@ class AuditController extends Controller
 
         return Inertia::render('Admin/Audits/Index', [
             'audits' => $audits,
-            'filters' => $request->only(['event', 'auditable_type', 'user_id', 'date_from', 'date_to']),
+            'filters' => $request->only(['event', 'auditable_type', 'user_id', 'date_from', 'date_to', 'sort', 'direction']),
             'auditableTypes' => $auditableTypes,
             'events' => $events,
         ]);

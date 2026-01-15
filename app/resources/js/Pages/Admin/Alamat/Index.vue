@@ -9,14 +9,33 @@ const props = defineProps({
 });
 
 const search = ref(props.filters.search || '');
+const sort = ref(props.filters.sort || 'created_at');
+const direction = ref(props.filters.direction || 'desc');
 
 const applyFilters = () => {
     router.get(route('admin.alamat.index'), {
         search: search.value,
+        sort: sort.value,
+        direction: direction.value,
     }, {
         preserveState: true,
         replace: true,
     });
+};
+
+const handleSort = (field) => {
+    if (sort.value === field) {
+        direction.value = direction.value === 'asc' ? 'desc' : 'asc';
+    } else {
+        sort.value = field;
+        direction.value = 'asc';
+    }
+    applyFilters();
+};
+
+const getSortIcon = (field) => {
+    if (sort.value !== field) return null;
+    return direction.value === 'asc' ? '↑' : '↓';
 };
 
 const deleteAlamat = (id, nama) => {
@@ -84,8 +103,14 @@ watch(search, (value) => {
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
                         <thead class="bg-gray-50 dark:bg-slate-900">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
-                                    Alamat Lengkap
+                                <th 
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800"
+                                    @click="handleSort('alamat_lengkap')"
+                                >
+                                    <div class="flex items-center gap-1">
+                                        Alamat Lengkap
+                                        <span v-if="sort === 'alamat_lengkap'" class="text-indigo-600 dark:text-indigo-400">{{ getSortIcon('alamat_lengkap') }}</span>
+                                    </div>
                                 </th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
                                     Desa / Kelurahan
@@ -96,8 +121,23 @@ watch(search, (value) => {
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
                                     Kota / Kabupaten
                                 </th>
-                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400 w-32">
-                                    Digunakan Oleh
+                                <th 
+                                    class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400 w-32 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800"
+                                    @click="handleSort('orang_count')"
+                                >
+                                    <div class="flex items-center justify-center gap-1">
+                                        Digunakan Oleh
+                                        <span v-if="sort === 'orang_count'" class="text-indigo-600 dark:text-indigo-400">{{ getSortIcon('orang_count') }}</span>
+                                    </div>
+                                </th>
+                                <th 
+                                    class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800"
+                                    @click="handleSort('created_at')"
+                                >
+                                    <div class="flex items-center justify-center gap-1">
+                                        Dibuat
+                                        <span v-if="sort === 'created_at'" class="text-indigo-600 dark:text-indigo-400">{{ getSortIcon('created_at') }}</span>
+                                    </div>
                                 </th>
                                 <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">
                                     Aksi
@@ -123,6 +163,9 @@ watch(search, (value) => {
                                         {{ item.orang_count }} Orang
                                     </span>
                                 </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500 dark:text-gray-400">
+                                    {{ new Date(item.created_at).toLocaleDateString('id-ID') }}
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <Link
                                         :href="route('admin.alamat.edit', item.id)"
@@ -139,7 +182,7 @@ watch(search, (value) => {
                                 </td>
                             </tr>
                             <tr v-if="alamat.data.length === 0">
-                                <td colspan="5" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                                <td colspan="7" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
                                     Tidak ada data alamat ditemukan.
                                 </td>
                             </tr>

@@ -36,13 +36,24 @@ class OrangController extends Controller
             $query->where('gender', $request->gender);
         }
 
-        $orang = $query->orderBy('nama')
-            ->paginate(10)
+        // Sort
+        $sortField = $request->get('sort', 'nama');
+        $sortDirection = $request->get('direction', 'asc');
+        
+        $validSortFields = ['nama', 'nik', 'gender', 'tanggal_lahir', 'created_at'];
+        
+        if (in_array($sortField, $validSortFields)) {
+            $query->orderBy($sortField, $sortDirection);
+        } else {
+            $query->orderBy('nama', 'asc');
+        }
+
+        $orang = $query->paginate(10)
             ->withQueryString();
 
         return Inertia::render('Admin/People/Index', [
             'orang' => $orang,
-            'filters' => $request->only(['search', 'gender']),
+            'filters' => $request->only(['search', 'gender', 'sort', 'direction']),
         ]);
     }
 

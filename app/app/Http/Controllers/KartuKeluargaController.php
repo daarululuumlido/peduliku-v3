@@ -30,13 +30,25 @@ class KartuKeluargaController extends Controller
             });
         }
 
-        $kartuKeluarga = $query->orderBy('created_at', 'desc')
-            ->paginate(10)
-            ->withQueryString();
+        // Sort
+        $sortField = $request->get('sort', 'created_at');
+        $sortDirection = $request->get('direction', 'desc');
+        
+        $validSortFields = ['no_kk', 'created_at', 'anggota_count'];
+        
+        if (in_array($sortField, $validSortFields)) {
+            if ($sortField === 'anggota_count') {
+                $query->withCount('anggota')->orderBy('anggota_count', $sortDirection);
+            } else {
+                $query->orderBy($sortField, $sortDirection);
+            }
+        }
+
+        $kartuKeluarga = $query->paginate(10)->withQueryString();
 
         return Inertia::render('Admin/KartuKeluarga/Index', [
             'kartuKeluarga' => $kartuKeluarga,
-            'filters' => $request->only(['search']),
+            'filters' => $request->only(['search', 'sort', 'direction']),
         ]);
     }
 
