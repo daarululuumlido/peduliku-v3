@@ -84,7 +84,25 @@ return [
     |
     */
 
-    'exclude' => [],
+    'exclude' => [
+        'password',
+        'remember_token',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
+        'email_verified_at',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Audit Retention Days
+    |--------------------------------------------------------------------------
+    |
+    | How many days of audit logs should be kept? Set to 0 to keep forever.
+    | Default: 90 days, configurable via AUDIT_RETENTION_DAYS env var.
+    |
+    */
+
+    'retention_days' => env('AUDIT_RETENTION_DAYS', 90),
 
     /*
     |--------------------------------------------------------------------------

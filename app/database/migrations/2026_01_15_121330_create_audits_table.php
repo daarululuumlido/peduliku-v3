@@ -22,7 +22,9 @@ return new class extends Migration
             $table->string($morphPrefix . '_type')->nullable();
             $table->unsignedBigInteger($morphPrefix . '_id')->nullable();
             $table->string('event');
-            $table->morphs('auditable');
+            $table->string('auditable_type')->nullable();
+            $table->char('auditable_id', 36)->nullable();
+            $table->index(['auditable_type', 'auditable_id']);
             $table->text('old_values')->nullable();
             $table->text('new_values')->nullable();
             $table->text('url')->nullable();

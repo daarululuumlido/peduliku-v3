@@ -14,11 +14,13 @@ class User extends Authenticatable implements AuditableContract
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use Auditable, HasFactory, HasRoles, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
+    protected $hidden = [
+        'password',
+        'remember_token',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
+    ];
+
     protected $fillable = [
         'name',
         'email',
@@ -34,9 +36,12 @@ class User extends Authenticatable implements AuditableContract
      *
      * @var list<string>
      */
-    protected $hidden = [
+    protected $exclude = [
         'password',
         'remember_token',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
+        'email_verified_at',
     ];
 
     /**
