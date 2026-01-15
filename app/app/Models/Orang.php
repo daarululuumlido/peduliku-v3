@@ -24,7 +24,6 @@ class Orang extends Model
         'nama_ibu_kandung',
         'no_whatsapp',
         'alamat_ktp_id',
-        'kartu_keluarga_id',
     ];
 
     protected $casts = [
@@ -40,11 +39,30 @@ class Orang extends Model
     }
 
     /**
-     * Get the family card for this person.
+     * Get family membership records for this person.
      */
-    public function kartuKeluarga(): BelongsTo
+    public function kartuKeluargaAnggota()
     {
-        return $this->belongsTo(KartuKeluarga::class, 'kartu_keluarga_id');
+        return $this->hasMany(KartuKeluargaAnggota::class, 'orang_id')
+            ->with('kartuKeluarga');
+    }
+
+    /**
+     * Get current family membership.
+     */
+    public function keanggotaanKeluargaSaatIni()
+    {
+        return $this->kartuKeluargaAnggota()->first();
+    }
+
+    /**
+     * Get current relationship status.
+     */
+    public function getStatusHubunganSaatIniAttribute()
+    {
+        $keanggotaan = $this->keanggotaanKeluargaSaatIni();
+
+        return $keanggotaan ? $keanggotaan->status_hubungan_label : null;
     }
 
     /**

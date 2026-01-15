@@ -15,7 +15,6 @@ class KartuKeluarga extends Model
 
     protected $fillable = [
         'no_kk',
-        'kepala_keluarga_id',
         'alamat_id',
     ];
 
@@ -28,18 +27,21 @@ class KartuKeluarga extends Model
     }
 
     /**
-     * Get the head of family (kepala keluarga).
-     */
-    public function kepalaKeluarga(): BelongsTo
-    {
-        return $this->belongsTo(Orang::class, 'kepala_keluarga_id');
-    }
-
-    /**
-     * Get all family members.
+     * Get all family members with their relationships.
      */
     public function anggota(): HasMany
     {
-        return $this->hasMany(Orang::class, 'kartu_keluarga_id');
+        return $this->hasMany(KartuKeluargaAnggota::class, 'kartu_keluarga_id')
+            ->with('orang');
+    }
+
+    /**
+     * Get head of family from relationship table.
+     */
+    public function kepalaKeluarga()
+    {
+        return $this->anggota()
+            ->where('status_hubungan', 'kepala_keluarga')
+            ->first();
     }
 }
