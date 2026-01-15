@@ -115,30 +115,31 @@ const removeMember = (orangId, nama) => {
 
                         <div v-if="kartuKeluarga.anggota && kartuKeluarga.anggota.length > 0" class="space-y-3">
                             <div 
-                                v-for="anggota in kartuKeluarga.anggota" 
-                                :key="anggota.id"
+                                v-for="membership in kartuKeluarga.anggota" 
+                                :key="membership.id"
                                 class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
                             >
                                 <div class="flex items-center gap-4">
                                     <div class="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
                                         <span class="text-gray-600 font-medium">
-                                            {{ anggota.nama.charAt(0).toUpperCase() }}
+                                            {{ membership.orang.nama.charAt(0).toUpperCase() }}
                                         </span>
                                     </div>
                                     <div>
-                                        <p class="font-medium text-gray-900">{{ anggota.nama }}</p>
-                                        <p class="text-sm text-gray-500 font-mono">{{ anggota.nik }}</p>
+                                        <p class="font-medium text-gray-900">{{ membership.orang.nama }}</p>
+                                        <p class="text-sm text-gray-500 font-mono">{{ membership.orang.nik }}</p>
+                                        <p class="text-xs text-indigo-600 mt-1">{{ membership.status_hubungan_label }}</p>
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-3">
                                     <Link
-                                        :href="route('admin.orang.show', anggota.id)"
+                                        :href="route('admin.orang.show', membership.orang.id)"
                                         class="text-blue-600 hover:text-blue-900 text-sm"
                                     >
                                         Lihat
                                     </Link>
                                     <button
-                                        @click="removeMember(anggota.id, anggota.nama)"
+                                        @click="removeMember(membership.orang.id, membership.orang.nama)"
                                         class="text-red-600 hover:text-red-900 text-sm"
                                     >
                                         Hapus dari KK
