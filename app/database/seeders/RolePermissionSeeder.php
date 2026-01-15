@@ -61,6 +61,9 @@ class RolePermissionSeeder extends Seeder
             'dokumen.view',
             'dokumen.upload',
             'dokumen.delete',
+
+            // Audit Log
+            'auditors.view',
         ];
 
         foreach ($permissions as $permission) {
@@ -77,6 +80,7 @@ class RolePermissionSeeder extends Seeder
             'kartu_keluarga.view', 'kartu_keluarga.create', 'kartu_keluarga.edit', 'kartu_keluarga.delete',
             'alamat.view', 'alamat.create', 'alamat.edit', 'alamat.delete',
             'dokumen.view', 'dokumen.upload', 'dokumen.delete',
+            'auditors.view',
         ]);
 
         // Create Viewer role (read-only)

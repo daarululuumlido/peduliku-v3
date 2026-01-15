@@ -6,10 +6,12 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use OwenIt\Auditing\Auditable;
+use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 
-class KartuKeluarga extends Model
+class KartuKeluarga extends Model implements AuditableContract
 {
-    use HasUuids;
+    use Auditable, HasUuids;
 
     protected $table = 'kartu_keluarga';
 

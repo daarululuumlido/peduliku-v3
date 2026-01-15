@@ -1,0 +1,13 @@
+{
+    "mcp": {
+        "mysql": {
+            "type": "remote",
+            "url": "http://127.0.1.1:3003/mcp",
+            "enabled": true,
+            "headers": {
+                "Authorization": "Bearer 45fdtgdfgsdfgsdfg"
+            }
+        }
+    },
+    "$schema": "https://opencode.ai/config.json"
+}

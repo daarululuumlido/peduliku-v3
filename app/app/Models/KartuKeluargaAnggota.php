@@ -5,10 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use OwenIt\Auditing\Auditable;
+use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 
-class KartuKeluargaAnggota extends Model
+class KartuKeluargaAnggota extends Model implements AuditableContract
 {
-    use HasUuids;
+    use Auditable, HasUuids;
 
     protected $table = 'kartu_keluarga_anggota';
 

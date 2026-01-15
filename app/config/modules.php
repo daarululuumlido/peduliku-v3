@@ -47,6 +47,12 @@ return [
                 'permission' => 'alamat.view',
             ],
             [
+                'label' => 'Audit Log',
+                'route' => 'admin.audits.index',
+                'icon' => 'clipboard-document-list',
+                'permission' => 'auditors.view',
+            ],
+            [
                 'type' => 'group',
                 'label' => 'Settings',
                 'icon' => 'cog',

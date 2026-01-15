@@ -17,6 +17,7 @@
         "laravel/socialite": "^5.24",
         "laravel/tinker": "^2.10.1",
         "laravolt/indonesia": "^0.39.0",
+        "owen-it/laravel-auditing": "^14.0",
         "spatie/laravel-permission": "^6.24",
         "tightenco/ziggy": "^2.0"
     },

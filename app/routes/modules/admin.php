@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminDashboardController;
+use App\Http\Controllers\AuditController;
 use App\Http\Controllers\KartuKeluargaController;
 use App\Http\Controllers\OrangController;
 use App\Http\Controllers\PermissionController;
@@ -15,6 +16,9 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'module:admin'])->group(function () {
+    // Root
+    Route::get('/', [AdminDashboardController::class, 'index'])->name('root');
+
     // Dashboard
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
@@ -48,4 +52,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'module:admin'])->gr
         Route::post('/users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
         Route::resource('users', UserController::class)->except(['show']);
     });
+
+    // Audit Routes
+    Route::get('/audits', [AuditController::class, 'index'])->name('audits.index');
+    Route::get('/audits/{audit}', [AuditController::class, 'show'])->name('audits.show');
 });

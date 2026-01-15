@@ -6,10 +6,12 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Laravolt\Indonesia\Models\Village;
+use OwenIt\Auditing\Auditable;
+use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 
-class Alamat extends Model
+class Alamat extends Model implements AuditableContract
 {
-    use HasUuids;
+    use Auditable, HasUuids;
 
     protected $table = 'alamat';
 
