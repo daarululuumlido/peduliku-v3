@@ -31,6 +31,40 @@ Fitur ini memungkinkan pesantren mengubah struktur organisasi (misal: memecah di
 | **ORG-01** | Create & Clone Period | Admin bisa membuat periode baru dari nol. Fitur **Clone**: menyalin seluruh struktur dari periode 2024 ke 2025, lalu melakukan penyesuaian |
 | **ORG-02** | Organization Tree View | Visualisasi struktur berbentuk bagan pohon (Parent-Child) agar mudah melihat alur komando |
 
+### C. Simulasi Penerapan Data (Studi Kasus: `struk.md`)
+
+Berdasarkan dokumen struktur organisasi tahun 2025/2026:
+
+**1. Mapping Unit & Hierarki (`unit_organisasi`)**
+
+| Level | Nama Unit | Kode | Parent | Urutan |
+|-------|-----------|------|--------|--------|
+| 1 | Yayasan Salsabila | - | NULL | B |
+| 1 | Sekretariat Pusat Pesantren | - | NULL | D |
+| 2 | Bagian Pengembangan SDM | - | Sekretariat Pusat | D.4 |
+| 1 | Bidang Diplomasi & Kemitraan | BIDIK | NULL | E |
+| 2 | Bagian Hubunan Strategis | - | BIDIK | E.5 |
+| 1 | Bidang Pengajaran TMI | BPK TMI | NULL | H |
+| 2 | Koordinator Bagian Kurikulum | - | BPK TMI | H.4 |
+| 3 | Sub Bag Perpustakaan | - | Koord. Kurikulum | 3 |
+
+**2. Mapping Jabatan (`master_jabatan`)**
+
+Contoh pada unit **BPK TMI (H)**:
+
+| Nama Jabatan | Is Pimpinan | Kuota |
+|--------------|-------------|-------|
+| Direktur Bidang BPK TMI | `true` | 1 |
+| Wakil Direktur Bidang BPK TMI | `true` | 1 |
+| Sekretaris Bidang BPK TMI | `false` | 1 |
+| Rumpun Nahwu, Jurumiyah & Tarbiyah | `false` | 1 |
+
+**3. Format Pegawai (`peran_pegawai`)**
+
+- **NIP** menggunakan format internal (contoh: `0001`, `0359`, `2534`).
+- Satu orang bisa memegang banyak jabatan (contoh: **Ust. Ahmad Silahudin, Lc.** ada di `Staff Hubungan Strategis (BIDIK)` dan `Rumpun Tajwid (BPK TMI)`).
+  - *Solusi:* Tabel `histori_jabatan_pegawai` akan mencatat 2 baris aktif untuk pegawai tersebut.
+
 ---
 
 ## 👔 MODUL 2.2: Manajemen Profil Pegawai (The Actor)

@@ -132,16 +132,16 @@ erDiagram
 
 ## 📋 Checklist Implementasi
 
-- [ ] Setup Laravel 12 dengan PostgreSQL
-- [ ] Integrasi laravolt/indonesia
+- [x] Setup Laravel 12 dengan PostgreSQL
+- [x] Integrasi laravolt/indonesia
 - [ ] Setup Redis caching
 - [ ] Implementasi Google OAuth (Laravel Socialite)
-- [ ] Implementasi login Password (configurable)
-- [ ] Implementasi login WhatsApp OTP (configurable)
-- [ ] Setup Spatie Permission (RBAC)
-- [ ] CRUD Orang dengan validasi NIK
-- [ ] CRUD Kartu Keluarga
-- [ ] Lazy-loading dropdown Wilayah
+- [x] Implementasi login Password (configurable)
+- [x] Implementasi login WhatsApp OTP (configurable)
+- [x] Setup Spatie Permission (RBAC)
+- [x] CRUD Orang dengan validasi NIK
+- [x] CRUD Kartu Keluarga
+- [x] Lazy-loading dropdown Wilayah
 - [ ] Setup Polymorphic file storage
 
 ---
