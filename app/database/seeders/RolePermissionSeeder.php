@@ -64,14 +64,14 @@ class RolePermissionSeeder extends Seeder
         ];
 
         foreach ($permissions as $permission) {
-            Permission::create(['name' => $permission]);
+            Permission::firstOrCreate(['name' => $permission]);
         }
 
         // Create Super Admin role (has all permissions via Gate::before)
-        $superAdminRole = Role::create(['name' => 'Super Admin']);
+        $superAdminRole = Role::firstOrCreate(['name' => 'Super Admin']);
 
         // Create Staff HR role
-        $staffHRRole = Role::create(['name' => 'Staff HR']);
+        $staffHRRole = Role::firstOrCreate(['name' => 'Staff HR']);
         $staffHRRole->givePermissionTo([
             'orang.view', 'orang.create', 'orang.edit', 'orang.delete', 'orang.restore',
             'kartu_keluarga.view', 'kartu_keluarga.create', 'kartu_keluarga.edit', 'kartu_keluarga.delete',
@@ -80,7 +80,7 @@ class RolePermissionSeeder extends Seeder
         ]);
 
         // Create Viewer role (read-only)
-        $viewerRole = Role::create(['name' => 'Viewer']);
+        $viewerRole = Role::firstOrCreate(['name' => 'Viewer']);
         $viewerRole->givePermissionTo([
             'orang.view',
             'kartu_keluarga.view',

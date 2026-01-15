@@ -18,7 +18,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->foreign('desa_id')
-                ->references('id')
+                ->references('code')
                 ->on('indonesia_villages')
                 ->onDelete('set null');
         });

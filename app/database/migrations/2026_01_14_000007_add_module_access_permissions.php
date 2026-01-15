@@ -20,18 +20,21 @@ return new class extends Migration
 
         // Assign to Super Admin (Super Admin already has all permissions via Gate::before)
         // But we add it explicitly for visibility
+        Role::firstOrCreate(['name' => 'Super Admin']);
         $superAdmin = Role::findByName('Super Admin');
         if ($superAdmin && ! $superAdmin->hasPermissionTo('module.admin.access')) {
             $superAdmin->givePermissionTo($permission);
         }
 
         // Assign to Staff HR
+        Role::firstOrCreate(['name' => 'Staff HR']);
         $staffHR = Role::findByName('Staff HR');
         if ($staffHR && ! $staffHR->hasPermissionTo('module.admin.access')) {
             $staffHR->givePermissionTo($permission);
         }
 
         // Assign to Viewer
+        Role::firstOrCreate(['name' => 'Viewer']);
         $viewer = Role::findByName('Viewer');
         if ($viewer && ! $viewer->hasPermissionTo('module.admin.access')) {
             $viewer->givePermissionTo($permission);
