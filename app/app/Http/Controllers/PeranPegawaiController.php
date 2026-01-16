@@ -246,6 +246,34 @@ class PeranPegawaiController extends Controller
     }
 
     /**
+     * Search active pegawai.
+     */
+    public function searchPegawai(Request $request)
+    {
+        $search = $request->query('q');
+
+        $pegawai = PeranPegawai::with('orang')
+            ->where('is_active', true)
+            ->whereHas('orang', function ($query) use ($search) {
+                $query->where('nama', 'like', "%{$search}%")
+                    ->orWhere('nik', 'like', "%{$search}%");
+            })
+            ->orWhere('nip', 'like', "%{$search}%")
+            ->limit(20)
+            ->get()
+            ->map(function ($p) {
+                return [
+                    'id' => $p->id,
+                    'nip' => $p->nip,
+                    'nama' => $p->orang->nama,
+                    'foto_url' => $p->foto_url ?? $p->orang->foto_url,
+                ];
+            });
+
+        return response()->json($pegawai);
+    }
+
+    /**
      * Get current jabatan of pegawai.
      */
     public function currentJabatan(PeranPegawai $peranPegawai)

@@ -106,6 +106,25 @@ The system uses a **custom_attributes** JSONB column for flexible, extensible da
 - **Design Decisions**: `../docs/design-decisions.md`
 - **Phase 1 (Foundation)**: `../docs/fase/fase-1-fondasi.md`
 - **Phase 2 (HRIS)**: `../docs/fase/fase-2-hris.md`
+- **Phase 3 (SANTRI)**: `../docs/fase/fase-3-santri.md`
+
+### Component Standards
+- **Modal Component**: The `Modal.vue` has been standardized to use `Teleport` to `body` for better z-index management.
+    - **Structure**: Uses `Teleport`, manual `fixed` positioning, and explicit `z-index` (z-50) handling.
+    - **Usage**: Ensure all new modals use this pattern to avoid stacking context issues or "gray screen" blocks.
+    - **Stability**: Removed fragile `<dialog>` element ref syncing; uses Vue control flow for visibility.
+
+---
+
+## 🚀 Recent Feature Implementations
+
+### Unit Organisasi & Jabatan (HRIS)
+- **Structure**: Hierarchical tree view for `UnitOrganisasi`.
+- **Management**:
+    - CRUD for Units (Parent-Child relationships).
+    - **Master Jabatan**: Managed via a **Modal** inside the Unit Detail page (`Show.vue`).
+    - **Pegawai Assignment**: Assign/Unassign active employees to positions directly within the Jabatan Modal.
+    - **Real-time Updates**: Reactively updates employee lists upon assignment/removal without full page reload.
 
 ---
 

@@ -17,6 +17,14 @@ class UnitOrganisasiController extends Controller
         $this->authorize('hris.unit_organisasi.view');
 
         $strukturId = $request->query('struktur_id');
+
+        // If no filter selected, default to active structure
+        if (! $strukturId) {
+            $activeStruktur = StrukturOrganisasi::active()->first();
+            if ($activeStruktur) {
+                $strukturId = $activeStruktur->id;
+            }
+        }
         
         // Get all units with their relationships
         $query = UnitOrganisasi::with(['parent', 'struktur', 'children'])
