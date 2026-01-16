@@ -28,11 +28,16 @@ class Orang extends Model implements AuditableContract
         'nama_ibu_kandung',
         'no_whatsapp',
         'alamat_ktp_id',
+        'custom_attribute',
     ];
 
-    protected $casts = [
-        'tanggal_lahir' => 'date',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'tanggal_lahir' => 'date',
+            'custom_attribute' => 'array',
+        ];
+    }
 
     /**
      * Get the KTP address for this person.
