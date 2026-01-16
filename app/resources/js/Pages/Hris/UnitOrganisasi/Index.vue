@@ -67,9 +67,8 @@ const isExpanded = (unitId) => {
                                 @change="filterByStruktur"
                                 class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 dark:bg-slate-700 dark:border-slate-600 dark:text-white"
                             >
-                                <option value="">Semua Periode</option>
                                 <option v-for="str in struktur" :key="str.id" :value="str.id">
-                                    {{ str.nama_periode }}
+                                    {{ str.nama_periode }} {{ str.is_active ? ' (Aktif)' : '' }}
                                 </option>
                             </select>
                         </div>
