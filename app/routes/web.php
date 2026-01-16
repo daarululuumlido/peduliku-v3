@@ -41,4 +41,5 @@ Route::middleware('auth')->group(function () {
 */
 
 require __DIR__.'/modules/admin.php';
+require __DIR__.'/modules/hris.php';
 require __DIR__.'/auth.php';

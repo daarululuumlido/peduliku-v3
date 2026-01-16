@@ -33,7 +33,10 @@
       "Bash(\"C:/Users/HasanBasri/.config/herd/bin/php.bat\" artisan make:model RiwayatIbadah --no-interaction)",
       "Bash(\"C:/Users/HasanBasri/.config/herd/bin/php.bat\" artisan make:model CatatanKepegawaian --no-interaction)",
       "Bash(\"C:/Users/HasanBasri/.config/herd/bin/php.bat\" artisan make:model MasterDokumenWajib --no-interaction)",
-      "Bash(\"C:/Users/HasanBasri/.config/herd/bin/php.bat\" artisan make:model ChecklistDokumenPegawai --no-interaction)"
+      "Bash(\"C:/Users/HasanBasri/.config/herd/bin/php.bat\" artisan make:model ChecklistDokumenPegawai --no-interaction)",
+      "Bash(\"C:/Users/HasanBasri/.config/herd/bin/php.bat\" artisan make:controller StrukturOrganisasiController --no-interaction)",
+      "Bash(\"C:/Users/HasanBasri/.config/herd/bin/php.bat\" artisan make:controller UnitOrganisasiController --no-interaction)",
+      "Bash(\"C:/Users/HasanBasri/.config/herd/bin/php.bat\" artisan route:list --columns=uri)"
     ]
   },
   "enabledMcpjsonServers": [

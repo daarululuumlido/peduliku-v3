@@ -55,4 +55,36 @@ class UnitOrganisasi extends Model
     {
         return $this->children()->with('allChildren');
     }
+
+    /**
+     * Scope to get tree structure
+     */
+    public function scopeTree($query)
+    {
+        return $query->with(['parent', 'children']);
+    }
+
+    /**
+     * Get root units (no parent)
+     */
+    public function scopeRoot($query)
+    {
+        return $query->whereNull('parent_id');
+    }
+
+    /**
+     * Get full path string
+     */
+    public function getFullPathAttribute(): string
+    {
+        $path = collect([$this->nama_unit]);
+        $parent = $this->parent;
+
+        while ($parent) {
+            $path->prepend($parent->nama_unit);
+            $parent = $parent->parent;
+        }
+
+        return $path->join(' > ');
+    }
 }
