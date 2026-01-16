@@ -37,7 +37,9 @@
       "Bash(\"C:/Users/HasanBasri/.config/herd/bin/php.bat\" artisan make:controller StrukturOrganisasiController --no-interaction)",
       "Bash(\"C:/Users/HasanBasri/.config/herd/bin/php.bat\" artisan make:controller UnitOrganisasiController --no-interaction)",
       "Bash(\"C:/Users/HasanBasri/.config/herd/bin/php.bat\" artisan route:list --columns=uri)",
-      "Bash(\"C:/Users/HasanBasri/.config/herd/bin/php.bat\" artisan make:controller PeranPegawaiController --no-interaction)"
+      "Bash(\"C:/Users/HasanBasri/.config/herd/bin/php.bat\" artisan make:controller PeranPegawaiController --no-interaction)",
+      "Bash(\"C:/Users/HasanBasri/.config/herd/bin/php.bat\" artisan make:command ImportStrukturOrganisasiCommand --command=import:struktur-organisasi --no-interaction)",
+      "Bash(git push:*)"
     ]
   },
   "enabledMcpjsonServers": [

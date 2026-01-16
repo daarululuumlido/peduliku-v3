@@ -31,7 +31,7 @@ class ImportStrukturOrganisasiCommand extends Command
             }
         }
 
-        $strukFile = base_path('docs/fase/struk.md');
+        $strukFile = dirname(base_path()).'/docs/fase/struk.md';
 
         if (! file_exists($strukFile)) {
             $this->error("File not found: {$strukFile}");
