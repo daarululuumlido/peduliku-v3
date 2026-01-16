@@ -119,6 +119,14 @@ class Orang extends Model implements AuditableContract
     }
 
     /**
+     * Get the pegawai role for this person.
+     */
+    public function peranPegawai()
+    {
+        return $this->hasOne(PeranPegawai::class, 'orang_id');
+    }
+
+    /**
      * Get gender label.
      */
     public function getGenderLabelAttribute(): string
