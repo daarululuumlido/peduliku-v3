@@ -83,6 +83,14 @@ class Orang extends Model implements AuditableContract
     }
 
     /**
+     * Get all education history for this person.
+     */
+    public function riwayatPendidikan()
+    {
+        return $this->hasMany(RiwayatPendidikan::class, 'orang_id');
+    }
+
+    /**
      * Get full name.
      */
     public function getNamaLengkapAttribute(): string
