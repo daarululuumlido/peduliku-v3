@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -24,6 +25,18 @@ class SimpleSantriImportCommand extends Command
                 return;
             }
         }
+
+        $this->info('Running migrate:fresh --seed...');
+        Artisan::call('migrate:fresh', ['--seed' => true]);
+        $this->info('Database migrated and seeded successfully!');
+
+        $this->info('Running laravolt:indonesia:seed...');
+        Artisan::call('laravolt:indonesia:seed');
+        $this->info('Laravolt Indonesia seeded successfully!');
+
+        $this->info('Running import:guru-karyawan...');
+        Artisan::call('import:guru-karyawan', ['--force' => true]);
+        $this->info('Guru karyawan imported successfully!');
 
         $this->info('Starting simple santri import...');
 
@@ -60,7 +73,7 @@ class SimpleSantriImportCommand extends Command
                    LEFT JOIN master_kelas ON master_kelas.id=master_rombel.id_kelas 
                    LEFT JOIN master_sekolah ON master_sekolah.id=master_kelas.id_sekolah 
                    LEFT JOIN master_ajaran ON master_ajaran.id=master_rombel.tahun_ajaran 
-                   WHERE (master_sekolah.sekolah='TMI') AND master_ajaran.`status`='Y'";
+                   WHERE master_ajaran.`status`='Y'";
 
         $santriData = DB::connection('source')->select($query);
 
@@ -80,11 +93,12 @@ class SimpleSantriImportCommand extends Command
         $familyCards = [];
         $familyMembersToInsert = [];
         $usedNiks = [];
+        $familyCardNiks = []; // Track NIKs per family card to prevent duplicates
 
         $totalRecords = count($santriData);
         $validRecords = 0;
         $skippedRecords = 0;
-        $reasons = [];
+        $skippedRecordsList = [];
         $usedNiks = [];
 
         $bar = $this->output->createProgressBar($totalRecords);
@@ -96,6 +110,25 @@ class SimpleSantriImportCommand extends Command
             // Skip if missing required fields
             if (empty($santri['nomorkk']) || empty($santri['nama_ayah']) || empty($santri['nama_ibu'])) {
                 $skippedRecords++;
+
+                // Track skipped record details
+                $missingFields = [];
+                if (empty($santri['nomorkk'])) {
+                    $missingFields[] = 'nomorkk';
+                }
+                if (empty($santri['nama_ayah'])) {
+                    $missingFields[] = 'nama_ayah';
+                }
+                if (empty($santri['nama_ibu'])) {
+                    $missingFields[] = 'nama_ibu';
+                }
+
+                $skippedRecordsList[] = [
+                    'nama' => ! empty($santri['nama']) ? $santri['nama'] : 'Unknown',
+                    'nik' => ! empty($santri['nik']) ? $santri['nik'] : 'N/A',
+                    'missing_fields' => implode(', ', $missingFields),
+                ];
+
                 $bar->advance();
 
                 continue;
@@ -180,7 +213,7 @@ class SimpleSantriImportCommand extends Command
                 'tanggal_lahir' => (! empty($santri['tanggal_lahir']) && $santri['tanggal_lahir'] !== '0000-00-00' && $santri['tanggal_lahir'] !== '') ? Carbon::parse($santri['tanggal_lahir'])->format('Y-m-d') : '1970-01-01',
                 'tempat_lahir' => ! empty($santri['tempat_lahir']) ? $santri['tempat_lahir'] : 'TIDAK DIKETAHUI',
                 'nama_ibu_kandung' => ! empty($santri['nama_ibu']) ? $santri['nama_ibu'] : null,
-                'no_whatsapp' => ! empty($santri['handphone_ayah']) ? $santri['handphone_ayah'] : null,
+                'no_whatsapp' => null,
                 'alamat_ktp_id' => $alamatId,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -249,35 +282,40 @@ class SimpleSantriImportCommand extends Command
 
             // Add family members if family card exists
             if ($kartuKeluargaId) {
-                // Ayah as kepala_keluarga
-                $familyMembersToInsert[] = [
-                    'id' => Str::uuid(),
-                    'kartu_keluarga_id' => $kartuKeluargaId,
-                    'orang_id' => $ayahId,
-                    'status_hubungan' => 'kepala_keluarga',
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ];
+                // Initialize NIK tracking for this family card if not exists
+                if (! isset($familyCardNiks[$santri['nomorkk']])) {
+                    $familyCardNiks[$santri['nomorkk']] = [];
+                }
 
-                // Ibu as istri
-                $familyMembersToInsert[] = [
-                    'id' => Str::uuid(),
-                    'kartu_keluarga_id' => $kartuKeluargaId,
-                    'orang_id' => $ibuId,
-                    'status_hubungan' => 'istri',
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ];
+                // Helper function to add member only if NIK is unique within family card
+                $addMemberIfUnique = function ($memberId, $memberNik, $memberName, $statusHubungan) use ($kartuKeluargaId, $santri, &$familyCardNiks, &$familyMembersToInsert) {
+                    if (in_array($memberNik, $familyCardNiks[$santri['nomorkk']])) {
+                        $this->warn("Duplicate NIK {$memberNik} found for {$memberName} in family card {$santri['nomorkk']}. Skipping member.");
 
-                // Santri as anak
-                $familyMembersToInsert[] = [
-                    'id' => Str::uuid(),
-                    'kartu_keluarga_id' => $kartuKeluargaId,
-                    'orang_id' => $santriId,
-                    'status_hubungan' => 'anak',
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ];
+                        return false;
+                    }
+
+                    $familyCardNiks[$santri['nomorkk']][] = $memberNik;
+                    $familyMembersToInsert[] = [
+                        'id' => Str::uuid(),
+                        'kartu_keluarga_id' => $kartuKeluargaId,
+                        'orang_id' => $memberId,
+                        'status_hubungan' => $statusHubungan,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+
+                    return true;
+                };
+
+                // Add Ayah as kepala_keluarga
+                $addMemberIfUnique($ayahId, $ayahNik, $santri['nama_ayah'], 'kepala_keluarga');
+
+                // Add Ibu as istri
+                $addMemberIfUnique($ibuId, $ibuNik, $santri['nama_ibu'], 'istri');
+
+                // Add Santri as anak
+                $addMemberIfUnique($santriId, $santriNik, $santri['nama'] ?? 'Unknown', 'anak');
             }
 
             $bar->advance();
@@ -288,6 +326,24 @@ class SimpleSantriImportCommand extends Command
 
         if ($skippedRecords > 0) {
             $this->warn("Skipped {$skippedRecords} records due to missing required data.");
+            $this->newLine();
+
+            // Display skipped records table
+            $this->info('Skipped Records Details:');
+            $headers = ['No', 'Nama', 'NIK', 'Missing Fields'];
+            $rows = [];
+
+            foreach ($skippedRecordsList as $index => $record) {
+                $rows[] = [
+                    $index + 1,
+                    $record['nama'],
+                    $record['nik'],
+                    $record['missing_fields'],
+                ];
+            }
+
+            $this->table($headers, $rows);
+            $this->newLine();
         }
 
         DB::beginTransaction();
@@ -297,39 +353,27 @@ class SimpleSantriImportCommand extends Command
             if (! empty($addressesToInsert)) {
                 $this->info('Inserting addresses...');
                 collect($addressesToInsert)->chunk(100)->each(function ($chunk) {
-                    try {
-                        DB::table('alamat')->insert($chunk->toArray());
-                        $this->line('Inserted '.$chunk->count().' addresses');
-                    } catch (\Exception $e) {
-                        $this->error('Failed to insert addresses: '.$e->getMessage());
-                    }
+                    DB::table('alamat')->insert($chunk->toArray());
+                    $this->line('Inserted '.$chunk->count().' addresses');
                 });
             }
 
             // Insert people SECOND (after addresses exist)
             $this->info('Inserting people...');
             collect($peopleToInsert)->chunk(100)->each(function ($chunk) {
-                try {
-                    DB::table('orang')->insert($chunk->toArray());
-                    $this->line('Inserted '.$chunk->count().' records');
-                } catch (\Exception $e) {
-                    $this->error('Failed to insert people: '.$e->getMessage());
-                }
+                DB::table('orang')->insert($chunk->toArray());
+                $this->line('Inserted '.$chunk->count().' records');
             });
 
-            // Insert family cards
+            // Insert family cards THIRD (after people exist, as it references kepala_keluarga_id)
             if (! empty($familyCards)) {
                 $this->info('Inserting family cards...');
                 collect($familyCards)->chunk(100)->each(function ($chunk) {
-                    try {
-                        DB::table('kartu_keluarga')->insert($chunk->toArray());
-                    } catch (\Exception $e) {
-                        $this->error('Failed to insert family cards: '.$e->getMessage());
-                    }
+                    DB::table('kartu_keluarga')->insert($chunk->toArray());
                 });
             }
 
-            // Insert family members
+            // Insert family members FOURTH (after both people and family cards exist)
             if (! empty($familyMembersToInsert)) {
                 $this->info('Creating family member relationships...');
 
@@ -345,11 +389,7 @@ class SimpleSantriImportCommand extends Command
                 }
 
                 collect($filteredMembers)->chunk(100)->each(function ($chunk) {
-                    try {
-                        DB::table('kartu_keluarga_anggota')->insert($chunk->toArray());
-                    } catch (\Exception $e) {
-                        $this->error('Failed to insert family members: '.$e->getMessage());
-                    }
+                    DB::table('kartu_keluarga_anggota')->insert($chunk->toArray());
                 });
             }
 
@@ -417,7 +457,7 @@ class SimpleSantriImportCommand extends Command
             } elseif (preg_match('/(\d{2})-(\d{2})-(\d{2})/', $dateStr, $matches)) {
                 $year = $matches[3];
                 $year = ($year > 30) ? '19'.$year : '20'.$year;
-                $result['tanggal'] = $year.'-'.$matches[1].'-'.$matches[2];
+                $result['tanggal'] = $year.'-'.$matches[2].'-'.$matches[1];
             } elseif (preg_match('/(\d{2})\/(\d{2})\/(\d{4})/', $dateStr, $matches)) {
                 $result['tanggal'] = $matches[3].'-'.$matches[2].'-'.$matches[1];
             } elseif (preg_match('/(\d{4})\/(\d{2})\/(\d{2})/', $dateStr, $matches)) {
@@ -452,7 +492,7 @@ class SimpleSantriImportCommand extends Command
                 $year = $matches[3];
                 $fullYear = ($year > 30) ? '19'.$year : '20'.$year;
 
-                return $fullYear.'-'.$matches[1].'-'.$matches[2];
+                return $fullYear.'-'.$matches[2].'-'.$matches[1];
             }
             // Try DD/MM/YYYY
             if (preg_match('/^(\d{2})\/(\d{2})\/(\d{4})$/', $dateString, $matches)) {
