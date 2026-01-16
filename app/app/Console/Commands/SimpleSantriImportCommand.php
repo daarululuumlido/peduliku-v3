@@ -208,11 +208,11 @@ $this->info('');
                 'nama_ibu_kandung' => ! empty($santri['nama_ibu']) ? $santri['nama_ibu'] : null,
                 'no_whatsapp' => null,
                 'alamat_ktp_id' => $alamatId,
-                'custom_attribute' => [
+                'custom_attribute' => json_encode([
                     'id' => $santri['id'] ?? null,
                     'induk' => $santri['induk'] ?? null,
                     'kelas' => $santri['kelas'] ?? null,
-                ],
+                ]),
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
