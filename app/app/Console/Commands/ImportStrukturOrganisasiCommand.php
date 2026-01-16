@@ -119,7 +119,7 @@ class ImportStrukturOrganisasiCommand extends Command
         $lines = explode("\n", $content);
 
         $sections = [];
-        $currentSection = null;
+        $currentSectionIndex = -1;
         $currentSubsection = null;
 
         for ($i = 0; $i < count($lines); $i++) {
@@ -132,13 +132,13 @@ class ImportStrukturOrganisasiCommand extends Command
 
             // Detect main section (## A, ## B, etc.)
             if (preg_match('/^##\s+([A-Z])\s+(.+)$/', $line, $matches)) {
-                $currentSection = [
+                $sections[] = [
                     'level' => trim($matches[1]),
                     'title' => trim($matches[2]),
                     'subsections' => [],
                     'positions' => [],
                 ];
-                $sections[] = $currentSection;
+                $currentSectionIndex = count($sections) - 1;
                 $currentSubsection = null;
                 continue;
             }
@@ -165,8 +165,8 @@ class ImportStrukturOrganisasiCommand extends Command
                     continue;
                 }
 
-                if ($currentSection) {
-                    $currentSection['positions'][] = [
+                if ($currentSectionIndex >= 0) {
+                    $sections[$currentSectionIndex]['positions'][] = [
                         'jabatan' => $jabatan,
                         'pejabat' => $pejabat,
                         'nip' => $nip,
@@ -187,7 +187,10 @@ class ImportStrukturOrganisasiCommand extends Command
             ->get();
 
         foreach ($orangList as $orang) {
-            $customAttr = json_decode($orang->custom_attribute, true);
+            $customAttr = $orang->custom_attribute;
+            if (is_string($customAttr)) {
+                $customAttr = json_decode($customAttr, true);
+            }
             if (isset($customAttr['nip'])) {
                 $this->nipToOrang[$customAttr['nip']] = $orang->id;
             }

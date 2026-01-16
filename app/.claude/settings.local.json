@@ -39,7 +39,11 @@
       "Bash(\"C:/Users/HasanBasri/.config/herd/bin/php.bat\" artisan route:list --columns=uri)",
       "Bash(\"C:/Users/HasanBasri/.config/herd/bin/php.bat\" artisan make:controller PeranPegawaiController --no-interaction)",
       "Bash(\"C:/Users/HasanBasri/.config/herd/bin/php.bat\" artisan make:command ImportStrukturOrganisasiCommand --command=import:struktur-organisasi --no-interaction)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "mcp__laravel-boost__list-artisan-commands",
+      "Bash(\"C:\\\\Users\\\\HasanBasri\\\\.config\\\\herd\\\\bin\\\\php\" artisan import:struktur-organisasi:*)",
+      "Bash(/c/Users/HasanBasri/.config/herd/bin/php artisan import:struktur-organisasi:*)",
+      "Bash(/c/Users/HasanBasri/.config/herd/bin/php.bat artisan:*)"
     ]
   },
   "enabledMcpjsonServers": [
