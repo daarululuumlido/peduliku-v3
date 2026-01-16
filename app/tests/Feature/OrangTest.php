@@ -247,4 +247,94 @@ class OrangTest extends TestCase
             ->has('orang.data', 1)
         );
     }
+
+    public function test_custom_attribute_can_be_stored(): void
+    {
+        $orangData = [
+            'nik' => '3201010101010001',
+            'nama' => 'John Doe',
+            'gender' => 'L',
+            'tanggal_lahir' => '1990-01-15',
+            'tempat_lahir' => 'Jakarta',
+            'custom_attribute' => [
+                'santri_id' => 'SAN001',
+                'kelas' => '10A',
+            ],
+        ];
+
+        $response = $this->actingAs($this->user)
+            ->post(route('orang.store'), $orangData);
+
+        $response->assertRedirect(route('orang.index'));
+
+        $this->assertDatabaseHas('orang', [
+            'nik' => '3201010101010001',
+            'nama' => 'John Doe',
+        ]);
+
+        $orang = Orang::where('nik', '3201010101010001')->first();
+        $this->assertEquals([
+            'santri_id' => 'SAN001',
+            'kelas' => '10A',
+        ], $orang->custom_attribute);
+    }
+
+    public function test_custom_attribute_is_optional(): void
+    {
+        $orangData = [
+            'nik' => '3201010101010001',
+            'nama' => 'John Doe',
+            'gender' => 'L',
+            'tanggal_lahir' => '1990-01-15',
+            'tempat_lahir' => 'Jakarta',
+        ];
+
+        $response = $this->actingAs($this->user)
+            ->post(route('orang.store'), $orangData);
+
+        $response->assertRedirect(route('orang.index'));
+
+        $this->assertDatabaseHas('orang', [
+            'nik' => '3201010101010001',
+            'nama' => 'John Doe',
+        ]);
+    }
+
+    public function test_custom_attribute_can_be_updated(): void
+    {
+        $orang = Orang::create([
+            'nik' => '3201010101010001',
+            'nama' => 'John Doe',
+            'gender' => 'L',
+            'tanggal_lahir' => '1990-01-15',
+            'tempat_lahir' => 'Jakarta',
+            'custom_attribute' => [
+                'santri_id' => 'SAN001',
+                'kelas' => '10A',
+            ],
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->put(route('orang.update', $orang), [
+                'nik' => '3201010101010001',
+                'nama' => 'John Doe',
+                'gender' => 'L',
+                'tanggal_lahir' => '1990-01-15',
+                'tempat_lahir' => 'Jakarta',
+                'custom_attribute' => [
+                    'santri_id' => 'SAN002',
+                    'kelas' => '11B',
+                    'status' => 'aktif',
+                ],
+            ]);
+
+        $response->assertRedirect(route('orang.index'));
+
+        $orang->refresh();
+        $this->assertEquals([
+            'santri_id' => 'SAN002',
+            'kelas' => '11B',
+            'status' => 'aktif',
+        ], $orang->custom_attribute);
+    }
 }
