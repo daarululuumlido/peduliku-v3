@@ -1,4 +1,5 @@
 <script setup>
+import { ref } from 'vue';
 import ModuleLayout from '@/Layouts/ModuleLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
 
@@ -64,7 +65,7 @@ const getGenderColor = (gender) => {
                             </div>
                             <div>
                                 <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
-                                    {{ pegawai.orang.nama }}
+                                    {{ pegawai.orang.nama_gelar }}
                                 </h3>
                                 <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
                                     NIP: {{ pegawai.nip }}

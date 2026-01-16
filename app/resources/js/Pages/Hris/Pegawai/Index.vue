@@ -156,7 +156,7 @@ watch(search, (value) => {
                                 </td>
                                 <td class="px-3 py-2 whitespace-nowrap sticky left-24 bg-white dark:bg-slate-800 z-10">
                                     <div class="text-sm font-medium text-gray-900 dark:text-white">
-                                        {{ item.orang.nama }}
+                                        {{ item.orang.nama_gelar }}
                                     </div>
                                     <div class="text-xs text-gray-500 dark:text-gray-400" v-if="item.orang.no_whatsapp">
                                         📱 {{ item.orang.no_whatsapp }}
@@ -208,7 +208,7 @@ watch(search, (value) => {
                                             </svg>
                                         </Link>
                                         <button
-                                            @click="deletePegawai(item.id, item.orang.nama)"
+                                            @click="deletePegawai(item.id, item.orang.nama_gelar)"
                                             class="p-1.5 text-red-600 hover:text-red-900 rounded hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-slate-700"
                                             title="Nonaktifkan"
                                         >

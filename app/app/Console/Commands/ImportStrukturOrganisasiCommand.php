@@ -78,14 +78,19 @@ class ImportStrukturOrganisasiCommand extends Command
                     $jabatanCreated++;
 
                     if (isset($this->nipToOrang[$position['nip']])) {
-                        $pegawai = $this->createPegawai($this->nipToOrang[$position['nip']], $position['nip']);
-                        if ($pegawai) {
-                            $pegawaiCreated++;
+                        $result = $this->createPegawai($this->nipToOrang[$position['nip']], $position['nip']);
+                        if ($result) {
+                            $pegawai = $result['pegawai'];
+                            if ($result['created']) {
+                                $pegawaiCreated++;
+                            }
 
                             // Create histori_jabatan_pegawai
                             $this->createHistoriJabatan($pegawai->id, $masterJabatan->id);
                             $historiCreated++;
                         }
+                    } else {
+                        $this->warn("  ⚠ NIP {$position['nip']} not found for: {$position['pejabat']}");
                     }
                 }
 
@@ -181,7 +186,26 @@ class ImportStrukturOrganisasiCommand extends Command
 
     private function buildNipMapping(): void
     {
-        // Get all orang with their NIP from custom_attribute
+        // Get all orang with their NIP from peran_pegawai table
+        $peranPegawaiList = PeranPegawai::with('orang')
+            ->whereNotNull('nip')
+            ->where('nip', '!=', '')
+            ->get();
+
+        foreach ($peranPegawaiList as $peranPegawai) {
+            $fullNip = $peranPegawai->nip;
+            
+            // Store full NIP mapping
+            $this->nipToOrang[$fullNip] = $peranPegawai->orang_id;
+            
+            // Also store last 4 digits mapping (short NIP format used in struk.md)
+            $shortNip = substr($fullNip, -4);
+            if (!isset($this->nipToOrang[$shortNip])) {
+                $this->nipToOrang[$shortNip] = $peranPegawai->orang_id;
+            }
+        }
+
+        // Also check custom_attribute for backward compatibility
         $orangList = Orang::whereNotNull('custom_attribute')
             ->where('custom_attribute', '!=', 'null')
             ->get();
@@ -191,12 +215,12 @@ class ImportStrukturOrganisasiCommand extends Command
             if (is_string($customAttr)) {
                 $customAttr = json_decode($customAttr, true);
             }
-            if (isset($customAttr['nip'])) {
+            if (isset($customAttr['nip']) && !isset($this->nipToOrang[$customAttr['nip']])) {
                 $this->nipToOrang[$customAttr['nip']] = $orang->id;
             }
         }
 
-        $this->info('Found '.count($this->nipToOrang).' people with NIP.');
+        $this->info('Found '.count($this->nipToOrang).' NIP mappings (including short formats).');
     }
 
     private function createUnitHierarchy(string $strukturId, array $section): array
@@ -267,7 +291,7 @@ class ImportStrukturOrganisasiCommand extends Command
         return $jabatan;
     }
 
-    private function createPegawai(string $orangId, string $nip): ?PeranPegawai
+    private function createPegawai(string $orangId, string $nip): ?array
     {
         // Check if pegawai already exists
         $pegawai = PeranPegawai::where('orang_id', $orangId)
@@ -275,7 +299,7 @@ class ImportStrukturOrganisasiCommand extends Command
             ->first();
 
         if ($pegawai) {
-            return $pegawai;
+            return ['pegawai' => $pegawai, 'created' => false];
         }
 
         // Create new pegawai
@@ -293,11 +317,21 @@ class ImportStrukturOrganisasiCommand extends Command
 
         $this->line("  ✓ Activated pegawai: NIP {$nip}");
 
-        return $pegawai;
+        return ['pegawai' => $pegawai, 'created' => true];
     }
 
     private function createHistoriJabatan(string $peranPegawaiId, string $masterJabatanId): void
     {
+        // Check if histori already exists to avoid duplicates
+        $exists = HistoriJabatanPegawai::where('peran_pegawai_id', $peranPegawaiId)
+            ->where('master_jabatan_id', $masterJabatanId)
+            ->whereNull('tgl_selesai')
+            ->exists();
+
+        if ($exists) {
+            return;
+        }
+
         HistoriJabatanPegawai::create([
             'id' => Str::uuid(),
             'peran_pegawai_id' => $peranPegawaiId,

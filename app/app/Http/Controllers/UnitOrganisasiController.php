@@ -15,23 +15,41 @@ class UnitOrganisasiController extends Controller
     public function index(Request $request)
     {
         $strukturId = $request->query('struktur_id');
-        $units = UnitOrganisasi::with(['parent', 'struktur', 'children'])
+        
+        // Get all units with their relationships
+        $query = UnitOrganisasi::with(['parent', 'struktur', 'children'])
+            ->withCount('masterJabatan')
             ->when($strukturId, function ($query, $strukturId) {
                 $query->where('struktur_id', $strukturId);
             })
             ->orderBy('level_hierarki')
-            ->orderBy('urutan')
-            ->get()
-            ->tree();
+            ->orderBy('urutan');
+        
+        // Get only root-level units (those without parents)
+        $units = $query->whereNull('parent_id')->get();
 
         $struktur = StrukturOrganisasi::all();
 
-        return inertia('UnitOrganisasi/Index', [
+        return inertia('Hris/UnitOrganisasi/Index', [
             'units' => $units,
             'struktur' => $struktur,
             'filters' => [
                 'struktur_id' => $strukturId,
             ],
+        ]);
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        $struktur = StrukturOrganisasi::all();
+        $units = UnitOrganisasi::orderBy('nama_unit')->get();
+
+        return inertia('Hris/UnitOrganisasi/Create', [
+            'struktur' => $struktur,
+            'units' => $units,
         ]);
     }
 
@@ -62,11 +80,21 @@ class UnitOrganisasiController extends Controller
                 }
             }
 
+            // Ensure unique name within the same parent
+            $exists = UnitOrganisasi::where('struktur_id', $validated['struktur_id'])
+                ->where('parent_id', $validated['parent_id'])
+                ->where('nama_unit', $validated['nama_unit'])
+                ->exists();
+
+            if ($exists) {
+                throw new \Exception('Nama unit sudah ada di level yang sama.');
+            }
+
             $unit = UnitOrganisasi::create($validated);
 
             DB::commit();
 
-            return redirect()->back()
+            return redirect()->route('hris.unit-organisasi.index')
                 ->with('success', 'Unit organisasi berhasil dibuat');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -83,8 +111,24 @@ class UnitOrganisasiController extends Controller
     {
         $unitOrganisasi->load(['parent', 'children', 'struktur', 'masterJabatan']);
 
-        return inertia('UnitOrganisasi/Show', [
+        return inertia('Hris/UnitOrganisasi/Show', [
             'unit' => $unitOrganisasi,
+        ]);
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(UnitOrganisasi $unitOrganisasi)
+    {
+        $units = UnitOrganisasi::where('struktur_id', $unitOrganisasi->struktur_id)
+            ->where('id', '!=', $unitOrganisasi->id)
+            ->orderBy('nama_unit')
+            ->get();
+
+        return inertia('Hris/UnitOrganisasi/Edit', [
+            'unit' => $unitOrganisasi,
+            'units' => $units,
         ]);
     }
 
@@ -110,11 +154,21 @@ class UnitOrganisasiController extends Controller
                     ->with('error', 'Tidak dapat menjadikan unit ini sebagai parent dari dirinya sendiri');
             }
 
+            // Recalculate level if parent changed
+            if (isset($validated['parent_id']) && $validated['parent_id'] != $unitOrganisasi->parent_id) {
+                if ($validated['parent_id']) {
+                    $parent = UnitOrganisasi::find($validated['parent_id']);
+                    $validated['level_hierarki'] = $parent ? $parent->level_hierarki + 1 : 0;
+                } else {
+                    $validated['level_hierarki'] = 0;
+                }
+            }
+
             $unitOrganisasi->update($validated);
 
             DB::commit();
 
-            return redirect()->back()
+            return redirect()->route('hris.unit-organisasi.show', $unitOrganisasi->id)
                 ->with('success', 'Unit organisasi berhasil diperbarui');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -134,15 +188,19 @@ class UnitOrganisasiController extends Controller
         try {
             // Check if unit has children
             if ($unitOrganisasi->children()->count() > 0) {
-                return redirect()->back()
-                    ->with('error', 'Tidak dapat menghapus unit yang memiliki sub-unit. Hapus sub-unit terlebih dahulu.');
+                throw new \Exception('Tidak dapat menghapus unit yang memiliki sub-unit. Hapus sub-unit terlebih dahulu.');
+            }
+
+            // Check if unit has master jabatan
+            if ($unitOrganisasi->masterJabatan()->count() > 0) {
+                 throw new \Exception('Tidak dapat menghapus unit yang memiliki jabatan. Hapus jabatan terlebih dahulu.');
             }
 
             $unitOrganisasi->delete();
 
             DB::commit();
 
-            return redirect()->back()
+            return redirect()->route('hris.unit-organisasi.index')
                 ->with('success', 'Unit organisasi berhasil dihapus');
         } catch (\Exception $e) {
             DB::rollBack();

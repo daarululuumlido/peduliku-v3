@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Alamat;
 use App\Models\Orang;
+use App\Models\PeranPegawai;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -61,6 +62,8 @@ class ImportGuruKaryawanCommand extends Command
             'errors' => 0,
             'addresses_created' => 0,
             'addresses_linked' => 0,
+            'peran_pegawai_created' => 0,
+            'peran_pegawai_updated' => 0,
         ];
 
         $bar = $this->output->createProgressBar(count($activeRecords));
@@ -127,9 +130,32 @@ class ImportGuruKaryawanCommand extends Command
                     } else {
                         $data['nik'] = $nik;
                         $data['id'] = Str::uuid();
-                        Orang::create($data);
+                        $orang = Orang::create($data);
                         $this->line("Created: {$data['nama']} (NIK: {$nik})");
                         $stats['created']++;
+                    }
+
+                    // Insert or update peran_pegawai
+                    $nip = trim($row['NIP'] ?? '');
+                    if (!empty($nip) && $orang) {
+                        $peranPegawaiData = [
+                            'orang_id' => $orang->id,
+                            'nip' => $nip,
+                            'tgl_bergabung' => $this->parseDate($row['TANGGAL MASUK'] ?? $row['TANGGAL LAHIR'] ?? ''),
+                            'status_kepegawaian' => $this->parseStatusKepegawaian($row['STATUS KEPEGAWAIAN'] ?? $row['Status Kepegawaian'] ?? ''),
+                            'is_pengajar' => $this->isPengajar($row['BIDANG TUGAS'] ?? $row['Bidang Tugas'] ?? ''),
+                            'is_active' => true,
+                        ];
+
+                        $peranPegawai = PeranPegawai::where('nip', $nip)->first();
+
+                        if ($peranPegawai) {
+                            $peranPegawai->update($peranPegawaiData);
+                            $stats['peran_pegawai_updated']++;
+                        } else {
+                            PeranPegawai::create($peranPegawaiData);
+                            $stats['peran_pegawai_created']++;
+                        }
                     }
                 } catch (\Exception $e) {
                     $this->error("Error processing {$row['NAMA']}: ".$e->getMessage());
@@ -159,8 +185,17 @@ class ImportGuruKaryawanCommand extends Command
             ['Errors', $stats['errors']],
             ['Addresses Created', $stats['addresses_created']],
             ['Addresses Linked', $stats['addresses_linked']],
+            ['Peran Pegawai Created', $stats['peran_pegawai_created']],
+            ['Peran Pegawai Updated', $stats['peran_pegawai_updated']],
             ['Total Processed', count($activeRecords)],
         ]);
+
+        // Automatically import organizational structure and link positions
+        if ($stats['peran_pegawai_created'] > 0 || $stats['peran_pegawai_updated'] > 0) {
+            $this->newLine();
+            $this->info('🔄 Automatically importing organizational structure...');
+            $this->call('import:struktur-organisasi', ['--force' => true]);
+        }
 
         return 0;
     }
@@ -449,5 +484,43 @@ class ImportGuruKaryawanCommand extends Command
         }
 
         return null;
+    }
+
+    private function parseStatusKepegawaian($status)
+    {
+        $status = strtolower(trim($status));
+
+        $mapping = [
+            'guru tetap' => 'Guru Tetap',
+            'guru kontrak' => 'Guru Kontrak',
+            'karyawan tetap' => 'Karyawan Tetap',
+            'karyawan kontrak' => 'Karyawan Kontrak',
+            'honorer' => 'Honorer',
+            'tetap' => 'Guru Tetap',
+            'kontrak' => 'Guru Kontrak',
+        ];
+
+        foreach ($mapping as $key => $value) {
+            if (stripos($status, $key) !== false) {
+                return $value;
+            }
+        }
+
+        return 'Honorer';
+    }
+
+    private function isPengajar($bidangTugas)
+    {
+        $bidangTugas = strtolower(trim($bidangTugas));
+
+        $teachingKeywords = ['guru', 'pengajar', 'ustadz', 'ustadzah', 'mengajar', 'pengajaran', 'pendidikan'];
+
+        foreach ($teachingKeywords as $keyword) {
+            if (stripos($bidangTugas, $keyword) !== false) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

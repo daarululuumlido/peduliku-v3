@@ -30,6 +30,14 @@ class StrukturOrganisasiController extends Controller
     }
 
     /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        return inertia('Hris/StrukturOrganisasi/Create');
+    }
+
+    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
@@ -89,11 +97,96 @@ class StrukturOrganisasiController extends Controller
 
         $strukturOrganisasi->pegawai_count = $pegawaiCount;
 
+        // Get all unit IDs in this structure
+        $unitIds = $strukturOrganisasi->unitOrganisasi->pluck('id');
+
+        // Fetch jabatan grouped by unit with employee counts
+        $jabatanData = DB::table('master_jabatan')
+            ->select([
+                'master_jabatan.id as jabatan_id',
+                'master_jabatan.unit_organisasi_id as unit_id',
+                'master_jabatan.nama_jabatan',
+                'master_jabatan.is_pimpinan',
+                DB::raw('COUNT(DISTINCT peran_pegawai.id) as pegawai_count'),
+            ])
+            ->leftJoin('histori_jabatan_pegawai', function ($join) {
+                $join->on('master_jabatan.id', '=', 'histori_jabatan_pegawai.master_jabatan_id')
+                    ->whereNull('histori_jabatan_pegawai.tgl_selesai');
+            })
+            ->leftJoin('peran_pegawai', function ($join) {
+                $join->on('histori_jabatan_pegawai.peran_pegawai_id', '=', 'peran_pegawai.id')
+                    ->where('peran_pegawai.is_active', true);
+            })
+            ->whereIn('master_jabatan.unit_organisasi_id', $unitIds)
+            ->groupBy('master_jabatan.id', 'master_jabatan.unit_organisasi_id', 'master_jabatan.nama_jabatan', 'master_jabatan.is_pimpinan')
+            ->orderBy('master_jabatan.is_pimpinan', 'desc') // Pimpinan first
+            ->orderBy('master_jabatan.nama_jabatan')
+            ->get()
+            ->groupBy('unit_id')
+            ->map(function ($jabatans) {
+                return $jabatans->values()->toArray();
+            })
+            ->toArray();
+
+        // Fetch pegawai grouped by jabatan (using composite key unit_id_jabatan_id)
+        $pegawaiData = DB::table('peran_pegawai')
+            ->join('histori_jabatan_pegawai', 'peran_pegawai.id', '=', 'histori_jabatan_pegawai.peran_pegawai_id')
+            ->join('master_jabatan', 'histori_jabatan_pegawai.master_jabatan_id', '=', 'master_jabatan.id')
+            ->join('unit_organisasi', 'master_jabatan.unit_organisasi_id', '=', 'unit_organisasi.id')
+            ->join('orang', 'peran_pegawai.orang_id', '=', 'orang.id')
+            ->where('unit_organisasi.struktur_id', $strukturOrganisasi->id)
+            ->where('peran_pegawai.is_active', true)
+            ->whereNull('histori_jabatan_pegawai.tgl_selesai')
+            ->select([
+                'unit_organisasi.id as unit_id',
+                'master_jabatan.id as jabatan_id',
+                'master_jabatan.is_pimpinan',
+                'peran_pegawai.id as pegawai_id',
+                'peran_pegawai.nip',
+                'orang.nama',
+                'orang.gelar_depan',
+                'orang.gelar_belakang',
+                'master_jabatan.nama_jabatan',
+                'histori_jabatan_pegawai.tgl_mulai',
+            ])
+            ->orderBy('master_jabatan.is_pimpinan', 'desc') // Pimpinan positions first
+            ->orderBy('orang.nama')
+            ->get()
+            ->groupBy(function ($item) {
+                return $item->unit_id.'_'.$item->jabatan_id;
+            })
+            ->map(function ($employees) {
+                return $employees->map(function ($emp) {
+                    $nama = $emp->nama;
+                    if ($emp->gelar_depan) {
+                        $nama = $emp->gelar_depan . ' ' . $nama;
+                    }
+                    if ($emp->gelar_belakang) {
+                        $nama = $nama . ', ' . $emp->gelar_belakang;
+                    }
+                    $emp->nama_lengkap = $nama;
+                    return $emp;
+                })->values()->toArray();
+            })
+            ->toArray();
+
         return inertia('Hris/StrukturOrganisasi/Show', [
             'struktur' => $strukturOrganisasi,
             'units' => $strukturOrganisasi->unitOrganisasi->map(function ($unit) {
                 return $unit->toArray();
             }),
+            'jabatanByUnit' => $jabatanData,
+            'pegawaiByJabatan' => $pegawaiData,
+        ]);
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(StrukturOrganisasi $strukturOrganisasi)
+    {
+        return inertia('Hris/StrukturOrganisasi/Edit', [
+            'struktur' => $strukturOrganisasi,
         ]);
     }
 

@@ -31,6 +31,8 @@ class Orang extends Model implements AuditableContract
         'custom_attribute',
     ];
 
+    protected $appends = ['nama_gelar'];
+
     protected function casts(): array
     {
         return [
@@ -96,6 +98,24 @@ class Orang extends Model implements AuditableContract
     public function getNamaLengkapAttribute(): string
     {
         return $this->nama;
+    }
+
+    /**
+     * Get full name with titles.
+     */
+    public function getNamaGelarAttribute(): string
+    {
+        $nama = $this->nama;
+
+        if ($this->gelar_depan) {
+            $nama = $this->gelar_depan . ' ' . $nama;
+        }
+
+        if ($this->gelar_belakang) {
+            $nama = $nama . ', ' . $this->gelar_belakang;
+        }
+
+        return $nama;
     }
 
     /**

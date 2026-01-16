@@ -6,9 +6,12 @@ import { ref, computed } from 'vue';
 const props = defineProps({
     struktur: Object,
     units: Object,
+    jabatanByUnit: Object,
+    pegawaiByJabatan: Object,
 });
 
 const expandedUnits = ref(new Set());
+const expandedJabatan = ref(new Set());
 
 const toggleExpand = (unitId) => {
     if (expandedUnits.value.has(unitId)) {
@@ -20,6 +23,52 @@ const toggleExpand = (unitId) => {
 
 const isExpanded = (unitId) => {
     return expandedUnits.value.has(unitId);
+};
+
+const toggleJabatan = (jabatanId) => {
+    if (expandedJabatan.value.has(jabatanId)) {
+        expandedJabatan.value.delete(jabatanId);
+    } else {
+        expandedJabatan.value.add(jabatanId);
+    }
+};
+
+const isJabatanExpanded = (jabatanId) => {
+    return expandedJabatan.value.has(jabatanId);
+};
+
+const getUnitJabatan = (unitId) => {
+    return props.jabatanByUnit?.[unitId] || [];
+};
+
+const getJabatanPegawai = (unitId, jabatanId) => {
+    return props.pegawaiByJabatan?.[`${unitId}_${jabatanId}`] || [];
+};
+
+const allExpanded = ref(false);
+
+const toggleAll = () => {
+    if (allExpanded.value) {
+        // Collapse all
+        expandedUnits.value.clear();
+        expandedJabatan.value.clear();
+        allExpanded.value = false;
+    } else {
+        // Expand all units
+        props.units.forEach(unit => {
+            expandedUnits.value.add(unit.id);
+        });
+        
+        // Expand all jabatans
+        if (props.jabatanByUnit) {
+            Object.values(props.jabatanByUnit).forEach(jabatans => {
+                jabatans.forEach(jabatan => {
+                    expandedJabatan.value.add(jabatan.jabatan_id);
+                });
+            });
+        }
+        allExpanded.value = true;
+    }
 };
 
 const renderUnitTree = (units, level = 0) => {
@@ -67,15 +116,15 @@ const renderUnitTree = (units, level = 0) => {
 };
 
 const rootUnits = computed(() => {
-    return units.filter(u => !u.parent_id);
+    return props.units.filter(u => !u.parent_id);
 });
 
 const totalJabatan = computed(() => {
-    return units.reduce((sum, unit) => sum + (unit.jabatan_count || 0), 0);
+    return props.units.reduce((sum, unit) => sum + (unit.jabatan_count || 0), 0);
 });
 
 const totalPegawai = computed(() => {
-    return struktur.pegawai_count || 0;
+    return props.struktur.pegawai_count || 0;
 });
 </script>
 
@@ -109,6 +158,19 @@ const totalPegawai = computed(() => {
                     </p>
                 </div>
                 <div class="flex gap-2">
+                    <button
+                        @click="toggleAll"
+                        class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium bg-white dark:bg-slate-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-600 transition shadow-sm"
+                    >
+                        <svg v-if="!allExpanded" class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 4.5L9 3.75M3.75 20.25v-4.5m0 4.5h4.5m-4.5-4.5L9 20.25M20.25 3.75v4.5m0-4.5h-4.5m4.5 4.5L15 3.75M20.25 20.25v-4.5m0 4.5h-4.5m4.5-4.5L15 20.25" />
+                        </svg>
+                        <svg v-else class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25" />
+                        </svg>
+                        {{ allExpanded ? 'Collapse All' : 'Expand All' }}
+                    </button>
+
                     <Link
                         :href="route('hris.struktur-organisasi.edit', struktur.id)"
                         class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium text-white shadow-sm transition btn-primary"
@@ -183,12 +245,15 @@ const totalPegawai = computed(() => {
                     <template v-for="unit in rootUnits" :key="unit.id">
                         <div class="mb-2">
                             <div
-                                class="flex items-center gap-2 p-3 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 hover:shadow-sm transition-shadow cursor-pointer"
-                                @click="unit.children && unit.children.length > 0 && toggleExpand(unit.id)"
+                                class="flex items-center gap-2 p-3 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 hover:shadow-sm transition-shadow"
                             >
-                                <div v-if="unit.children && unit.children.length > 0" class="flex-shrink-0">
+                                <button
+                                    v-if="(unit.children && unit.children.length > 0) || getUnitJabatan(unit.id).length > 0"
+                                    @click="toggleExpand(unit.id)"
+                                    class="flex-shrink-0 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                                >
                                     <svg
-                                        class="w-5 h-5 text-gray-500 transition-transform dark:text-gray-400"
+                                        class="w-5 h-5 transition-transform"
                                         :class="{ 'rotate-90': isExpanded(unit.id) }"
                                         fill="none"
                                         viewBox="0 0 24 24"
@@ -197,7 +262,7 @@ const totalPegawai = computed(() => {
                                     >
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                                     </svg>
-                                </div>
+                                </button>
                                 <div v-else class="w-5"></div>
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-center gap-2">
@@ -206,16 +271,18 @@ const totalPegawai = computed(() => {
                                     </div>
                                     <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                         {{ unit.jabatan_count || 0 }} jabatan
-                                        <span v-if="unit.children && unit.children.length > 0"> · {{ unit.children.length }} sub-unit</span>
+                                        <span v-if="unit.children && unit.children.length > 0">· {{ unit.children.length }} sub-unit</span>
+                                        <span v-if="getUnitJabatan(unit.id).length > 0">· {{ getUnitJabatan(unit.id).length }} jabatan</span>
                                     </div>
                                 </div>
-                                <Link
-                                    :href="route('hris.unit-organisasi.show', unit.id)"
-                                    class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 text-sm"
-                                    @click.stop
+                                <button
+                                    v-if="(unit.children && unit.children.length > 0) || getUnitJabatan(unit.id).length > 0"
+                                    @click="toggleExpand(unit.id)"
+                                    class="px-3 py-1 text-sm rounded transition-colors"
+                                    :class="isExpanded(unit.id) ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300' : 'text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300'"
                                 >
-                                    Detail
-                                </Link>
+                                    {{ isExpanded(unit.id) ? 'Sembunyikan' : 'Lihat Detail' }}
+                                </button>
                             </div>
 
                             <!-- Children -->
@@ -230,16 +297,113 @@ const totalPegawai = computed(() => {
                                             </div>
                                             <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                                 {{ child.jabatan_count || 0 }} jabatan
+                                                <span v-if="getUnitJabatan(child.id).length > 0"> · {{ getUnitJabatan(child.id).length }} jabatan</span>
                                             </div>
                                         </div>
-                                        <Link
-                                            :href="route('hris.unit-organisasi.show', child.id)"
-                                            class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 text-sm"
-                                        >
-                                            Detail
-                                        </Link>
+                                    </div>
+
+                                    <!-- Child's Jabatan List -->
+                                    <div v-if="getUnitJabatan(child.id).length > 0" class="ml-4 md:ml-12 mt-2 space-y-2">
+                                        <div v-for="jabatan in getUnitJabatan(child.id)" :key="jabatan.jabatan_id" class="space-y-2">
+                                            <!-- Jabatan Item -->
+                                            <div 
+                                                @click="toggleJabatan(jabatan.jabatan_id)"
+                                                class="flex items-center justify-between p-2 bg-gray-50 dark:bg-slate-700/50 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+                                            >
+                                                <div class="flex items-center gap-2">
+                                                    <span v-if="isJabatanExpanded(jabatan.jabatan_id)" class="text-xs text-gray-500">▼</span>
+                                                    <span v-else class="text-xs text-gray-500">▶</span>
+                                                    <div class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                        <span v-if="jabatan.is_pimpinan" class="mr-1" title="Pimpinan">👑</span>
+                                                        {{ jabatan.nama_jabatan }}
+                                                    </div>
+                                                </div>
+                                                <span class="text-xs bg-gray-200 dark:bg-slate-600 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded-full">
+                                                    {{ jabatan.pegawai_count }} org
+                                                </span>
+                                            </div>
+
+                                            <!-- Employees in Jabatan -->
+                                            <div v-if="isJabatanExpanded(jabatan.jabatan_id)" class="ml-2 md:ml-6 space-y-2 border-l-2 border-gray-100 dark:border-slate-700 pl-2 md:pl-3">
+                                                <div v-for="emp in getJabatanPegawai(child.id, jabatan.jabatan_id)" :key="emp.pegawai_id" class="flex items-start gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700/30">
+                                                    <div class="flex-shrink-0 mt-1">
+                                                        <div class="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center">
+                                                            <svg class="w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                                                            </svg>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex-1 min-w-0">
+                                                        <div class="flex flex-col md:flex-row md:items-center gap-0.5 md:gap-2">
+                                                            <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ emp.nama_lengkap }}</p>
+                                                            <span v-if="emp.nip" class="text-xs text-gray-500 dark:text-gray-400">({{ emp.nip }})</span>
+                                                        </div>
+                                                        <p v-if="emp.tgl_mulai" class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                                            Sejak {{ new Date(emp.tgl_mulai).toLocaleDateString('id-ID', { year: 'numeric', month: 'short' }) }}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div v-if="getJabatanPegawai(child.id, jabatan.jabatan_id).length === 0" class="text-xs text-gray-400 italic">
+                                                    Belum ada pejabat definitif
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </template>
+                            </div>
+
+                            <!-- Parent Unit's Jabatan List -->
+                            <div v-if="isExpanded(unit.id) && getUnitJabatan(unit.id).length > 0" class="mt-2 ml-4 md:ml-6 space-y-2">
+                                <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
+                                    <span class="px-2 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded">
+                                        {{ getUnitJabatan(unit.id).length }} Jabatan
+                                    </span>
+                                </div>
+                                
+                                <div v-for="jabatan in getUnitJabatan(unit.id)" :key="jabatan.jabatan_id" class="space-y-2">
+                                    <!-- Jabatan Item -->
+                                    <div 
+                                        @click="toggleJabatan(jabatan.jabatan_id)"
+                                        class="flex items-center justify-between p-2 bg-gray-50 dark:bg-slate-700/50 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+                                    >
+                                        <div class="flex items-center gap-2">
+                                            <span v-if="isJabatanExpanded(jabatan.jabatan_id)" class="text-xs text-gray-500">▼</span>
+                                            <span v-else class="text-xs text-gray-500">▶</span>
+                                            <div class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                <span v-if="jabatan.is_pimpinan" class="mr-1" title="Pimpinan">👑</span>
+                                                {{ jabatan.nama_jabatan }}
+                                            </div>
+                                        </div>
+                                        <span class="text-xs bg-gray-200 dark:bg-slate-600 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded-full">
+                                            {{ jabatan.pegawai_count }} org
+                                        </span>
+                                    </div>
+
+                                    <!-- Employees in Jabatan -->
+                                    <div v-if="isJabatanExpanded(jabatan.jabatan_id)" class="ml-2 md:ml-6 space-y-2 border-l-2 border-gray-100 dark:border-slate-700 pl-2 md:pl-3">
+                                        <div v-for="emp in getJabatanPegawai(unit.id, jabatan.jabatan_id)" :key="emp.pegawai_id" class="flex items-start gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700/30">
+                                            <div class="flex-shrink-0 mt-1">
+                                                <div class="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center">
+                                                    <svg class="w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                                <div class="flex flex-col md:flex-row md:items-center gap-0.5 md:gap-2">
+                                                    <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ emp.nama_lengkap }}</p>
+                                                    <span v-if="emp.nip" class="text-xs text-gray-500 dark:text-gray-400">({{ emp.nip }})</span>
+                                                </div>
+                                                <p v-if="emp.tgl_mulai" class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                                    Sejak {{ new Date(emp.tgl_mulai).toLocaleDateString('id-ID', { year: 'numeric', month: 'short' }) }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div v-if="getJabatanPegawai(unit.id, jabatan.jabatan_id).length === 0" class="text-xs text-gray-400 italic">
+                                            Belum ada pejabat definitif
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </template>
