@@ -1,3 +1,114 @@
+# 🎯 PeduliKu v3 - Agent Guidelines
+
+> **PeduliKu** adalah sistem manajemen terpadu untuk pesantren yang mencakup manajemen orang, kepegawaian (HRIS), dan akademik santri.
+
+---
+
+## 📋 Project Overview
+
+### Application Type
+- **Single Tenancy**: 1 Pesantren = 1 Aplikasi
+- **Architecture**: Monolithic dengan Inertia.js + Vue 3
+- **Database**: PostgreSQL 16.x (optimized untuk 10K+ data)
+
+### Tech Stack Summary
+- **Backend**: Laravel 12, PHP 8.3+
+- **Frontend**: Vue 3 + Inertia.js v2, Tailwind CSS 4, Vite
+- **Cache/Queue**: Redis 7.x
+- **Testing**: PHPUnit 11
+- **Auth**: Laravel Sanctum + Socialite (Google OAuth)
+
+### Development Focus (Current Phases)
+
+| Phase | Name | Status | Description |
+|-------|------|--------|-------------|
+| **Phase 1** | Fondasi & Manajemen Orang | 🔵 Active | Core system, auth, RBAC, people management |
+| **Phase 2** | HRIS & Organisasi | 🔵 Active | Struktur organisasi dinamis, manajemen pegawai |
+| **Phase 3** | Santri & Akademik | ⚪ Pending | Manajemen santri *(coming soon)*
+
+---
+
+## 🏗️ Architecture Decisions
+
+### Data Wilayah Indonesia
+- **Package**: `laravolt/indonesia` (Provinsi → Kota/Kab → Kecamatan → Desa)
+- **Optimization Strategy**:
+  - Lazy loading dropdown (cascade: Provinsi → Kota → Kecamatan → Desa)
+  - AJAX autocomplete dengan `ILIKE` atau full-text search
+  - Redis cache untuk data static (provinsi, kota)
+  - Virtual scroll di Vue untuk dropdown besar
+
+### Authentication (Flexible via Config)
+| Method | Status | Description |
+|--------|--------|-------------|
+| **Google OAuth** | ✅ Primary (Default ON) | Login utama |
+| **Email/Password** | ⚙️ Configurable | Via `AUTH_PASSWORD_ENABLED` env |
+| **WhatsApp OTP** | ⚙️ Configurable | Via `AUTH_WHATSAPP_ENABLED` env |
+
+### Organisasi Hirarki (Dynamic)
+- **Tidak di-hardcode** di code
+- **Self-referencing table**: `unit_organisasi` dengan `parent_id`
+- Admin bisa tambah/edit/hapus unit via UI tanpa coding
+- Unlimited level hierarki dengan drag & drop reorder
+
+### NIP (Nomor Induk Pegawai)
+- **Mode**: Input manual
+- **Format**: Bebas (sesuai kebijakan pesantren)
+- **Validasi**: Unique constraint di database
+
+---
+
+## 🗂️ Database Structure Highlights
+
+### Core Entities (Phase 1)
+- `users` - Authentication & RBAC
+- `orang` - Central people database (NIK, nama, alamat, dll)
+- `alamat` - Alamat dengan referensi ke indonesia_villages
+- `kartu_keluarga` - Legal structure untuk keluarga
+- `lampiran_dokumen` - Polymorphic file storage
+
+### HRIS Entities (Phase 2)
+- `struktur_organisasi` - Periode organisasi (tahun ajaran)
+- `unit_organisasi` - Hierarki unit (parent-child)
+- `master_jabatan` - Jabatan per unit
+- `peran_pegawai` - Profil pegawai
+- `histori_jabatan_pegawai` - Tracking karir & mutasi
+- `riwayat_pendidikan` - Riwayat pendidikan formal
+- `riwayat_keluarga_pegawai` - Status keluarga
+- `riwayat_ibadah` - Tracking Umroh/Haji (RENCANA/SUDAH)
+- `catatan_kepegawaian` - Generic log (prestasi, pelanggaran, kesehatan)
+
+---
+
+## 📝 Coding Conventions (Project Specific)
+
+### Database Conventions
+- **UUID Primary Keys**: Gunakan `uuid` sebagai primary key untuk semua tabel
+- **Soft Deletes**: Gunakan soft deletes untuk data penting (orang, pegawai, dll)
+- **Timestamps**: Gunakan `created_at` dan `updated_at` secara default
+- **Naming**: Gunakan snake_case untuk nama tabel dan kolom
+
+### Indonesian Language Context
+- **Database Content**: Semua konten data dalam Bahasa Indonesia
+- **UI Labels**: Gunakan Bahasa Indonesia untuk user-facing text
+- **Code Comments**: Kode boleh menggunakan English/Indonesian, tapi prefer English untuk konsistensi
+- **Error Messages**: User-facing error messages dalam Bahasa Indonesia
+
+### Custom Attributes Pattern
+The system uses a **custom_attributes** JSONB column for flexible, extensible data:
+- Implemented in `Orang` model and related controllers
+- Use KeyValueInput component for frontend UI
+- Example: `{"hobby": "reading", "blood_type": "O"}`
+- Always validate custom attributes through Form Request classes
+
+### Documentation References
+- **Tech Stack**: `../docs/tech-stack.md`
+- **Design Decisions**: `../docs/design-decisions.md`
+- **Phase 1 (Foundation)**: `../docs/fase/fase-1-fondasi.md`
+- **Phase 2 (HRIS)**: `../docs/fase/fase-2-hris.md`
+
+---
+
 <laravel-boost-guidelines>
 === foundation rules ===
 
