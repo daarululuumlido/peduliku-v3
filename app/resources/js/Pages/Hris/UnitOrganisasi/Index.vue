@@ -44,15 +44,23 @@ const isExpanded = (unitId) => {
                 <h2 class="font-semibold text-xl text-gray-800 dark:text-white leading-tight">
                     Unit Organisasi
                 </h2>
-                <Link
-                    :href="route('hris.unit-organisasi.create')"
-                    class="px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
-                >
-                    Tambah Unit
-                </Link>
             </div>
         </template>
 
+        <!-- Page Header with Actions -->
+        <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div></div>
+            <div class="flex gap-2">
+             <Link
+                    :href="route('hris.unit-organisasi.create')"
+                     class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium text-white shadow-sm transition btn-primary"
+                ><svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                    Tambah Unit
+                </Link>
+            </div>
+        </div>
         <!-- Filters -->
         <div class="mb-6">
             <div class="bg-white overflow-hidden shadow-sm rounded-xl dark:bg-slate-800">
