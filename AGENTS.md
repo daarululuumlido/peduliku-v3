@@ -25,21 +25,65 @@
 
 Refer to `docs/` directory for project-specific documentation:
 
+### Core Documentation
 | Document | Path | Purpose |
 |----------|------|---------|
 | **Project Introduction** | `docs/intro.md` | Roadmap, current focus, ERD overview |
 | **Tech Stack** | `docs/tech-stack.md` | Architecture, technologies, why Inertia+Vue |
 | **Design Decisions** | `docs/design-decisions.md` | Tenancy model, address data strategy, auth config, org hierarchy |
-| **Phase 1** | `docs/fase/fase-1-fondasi.md` | Foundation, auth, people management (CURRENT FOCUS) |
-| **Phase 2** | `docs/fase/fase-2-hris.md` | HRIS, employee management, organization structure |
-| **Phase 3** | `docs/fase/fase-3-santri.md` | Student management, wali relationships, academics |
 
-**Important Context:**
-- Single-tenancy architecture (1 pesantren = 1 app)
-- Address data: Use Laravolt Indonesia package (84K+ desa data)
-- Organization hierarchy: Dynamic via database (self-referencing `unit_organisasi`)
-- Authentication: Google OAuth primary, password/WhatsApp configurable
-- NIP: Manual input, flexible format, unique constraint
+### Phase Documentation
+| Phase | Path | Focus Area | Status |
+|-------|------|------------|--------|
+| **Fase 1** | `docs/fase/fase-1-fondasi.md` | Foundation, auth, people management | 🔵 CURRENT |
+| **Fase 2** | `docs/fase/fase-2-hris.md` | HRIS, employee management, organization structure | 🔵 IN PROGRESS |
+| **Fase 3** | `docs/fase/fase-3-santri.md` | Student management, wali relationships, academics | ⚪ LATER |
+
+### Module Breakdown by Phase
+
+#### Fase 1: Foundation & People Management
+- **System Bootstrapping**: Database seeder, Laravolt Indonesia integration, Redis setup
+- **Authentication & RBAC**: Google OAuth, configurable password/WhatsApp login, role & permission management
+- **People Management**: CRUD Orang with NIK validation, Kartu Keluarga, lazy-loading address dropdown
+- **Global File Storage**: Polymorphic `lampiran_dokumen` table for all file attachments
+
+#### Fase 2: HRIS & Organization
+- **MODUL 2.1 - Struktur Organisasi**: Dynamic hierarchy via `unit_organisasi` (self-referencing), period cloning, tree view visualization
+- **MODUL 2.2 - Profil Pegawai**: Employee activation (Orang → Pegawai), NIP input, position history (`histori_jabatan_pegawai`)
+- **MODUL 2.3 - Riwayat & Catatan**: Education history, family history, ibadah history (Umroh/Haji), custom event logger
+- **MODUL 2.4 - Dokumen**: Document checklist, mandatory document master, expiry reminders
+
+#### Fase 3: Santri & Academic
+- **Santri Activation**: Orang → Santri role, auto-generated NIS, status history (Aktif/Cuti/Lulus/Keluar)
+- **Wali Relationships**: Connect santri with wali (may be existing pegawai or regular orang)
+- **Dokumen Santri**: Document verification for registration (Akta, KK, Rapor SD)
+
+### Important Context
+
+#### Architecture & Design
+- **Single-tenancy architecture**: 1 pesantren = 1 app (can be refactored to multi-tenant later)
+- **Address data strategy**: Use Laravolt Indonesia package (84K+ desa data)
+  - Lazy-loading dropdown: Provinsi → Kota → Kecamatan → Desa
+  - Use AJAX autocomplete with `ILIKE` or full-text search
+  - Index columns `nama`, `kode` in PostgreSQL
+  - Cache static data (provinsi, kota) in Redis
+- **Organization hierarchy**: Dynamic via database (self-referencing `unit_organisasi`)
+  - Tree structure: Yayasan → Pendidikan → SMA IT → Tata Usaha
+  - Unlimited hierarchy levels via `parent_id`
+  - Supports drag & drop reordering and period cloning
+- **Authentication**: Google OAuth primary, password/WhatsApp configurable via `.env`
+- **NIP**: Manual input, flexible format, unique constraint in database
+
+#### Current Development Focus
+- **Fase 1** (Foundation & People Management): Core infrastructure, authentication, CRUD Orang with NIK validation, Kartu Keluarga
+- **Fase 2** (HRIS & Organization): Employee activation, organization structure, position history, education history, document checklist
+- **Fase 3** (Santri & Academic): Coming after Fase 1 & 2 completion
+
+#### Database Relationships
+- ORANG can become PERAN_PEGAWAI (employee) or PERAN_SANTRI (student)
+- One person can hold multiple positions simultaneously (e.g., Staff in multiple units)
+- All main entities use UUID primary keys with soft deletes
+- Polymorphic relationships for documents (lampiran_dokumen)
 
 ## PHP/Laravel Guidelines
 
@@ -169,13 +213,41 @@ Refer to `docs/` directory for project-specific documentation:
 - Use Inertia for SPA with Vue.js
 - Route model binding for show/edit/update/destroy actions
 
-## Key Libraries
-- Laravel 12.x framework
-- Vue 3 with Inertia.js
-- Tailwind CSS 4.0
-- Laravolt Indonesia for address data
-- Spatie Permission for RBAC
-- Laravel Sanctum for API authentication
+## Key Libraries & Technologies
+
+### Backend
+| Library | Version | Purpose |
+|---------|---------|---------|
+| Laravel | 12.x | Main framework |
+| PHP | 8.3+ | Minimum requirement |
+| PostgreSQL | 16.x | Database with JSONB support |
+| Redis | 7.x | Cache, session, queue |
+| Laravel Sanctum | - | API authentication for mobile |
+| Spatie Permission | - | RBAC (Role-Based Access Control) |
+| Laravolt Indonesia | - | Indonesia region data (84K+ desa) |
+| Pest PHP | - | Modern testing framework |
+
+### Frontend
+| Library | Purpose |
+|---------|---------|
+| Inertia.js | Bridge Laravel ↔ Vue (no manual API) |
+| Vue 3 | Frontend framework with Composition API |
+| Vite | Fast HMR & build tool |
+| Tailwind CSS 4 | Utility-first CSS |
+| Pinia | Vue 3 state management |
+| TanStack Table | Powerful tables with sorting/filter/pagination |
+| PrimeVue / Naive UI | Premium component library (optional) |
+| Lucide / Heroicons | Icon library |
+| ApexCharts / Chart.js | Dashboard & reporting |
+
+### Why Inertia + Vue 3?
+- SPA experience without full page reload
+- No manual API needed (server-side auth preserved)
+- SEO friendly (SSR support if needed)
+- Fully customizable UI
+- Lightweight performance
+- Real-time reactivity
+- Future-proof for mobile API extension
 
 ## Foreign Key Constraints
 - Always respect insertion order: addresses → people → family cards → relationships
