@@ -63,17 +63,10 @@ class SimpleSantriImportCommand extends Command
 
             return;
         }
-
+$this->info('');
         // Get santri data with school/class info
         $this->info('Fetching santri data...');
-        $query = "SELECT master_santri.* 
-                   FROM master_rombel_siswa 
-                   RIGHT JOIN master_santri ON master_rombel_siswa.id_santri=master_santri.id 
-                   LEFT JOIN master_rombel ON master_rombel.id=master_rombel_siswa.id_rombel 
-                   LEFT JOIN master_kelas ON master_kelas.id=master_rombel.id_kelas 
-                   LEFT JOIN master_sekolah ON master_sekolah.id=master_kelas.id_sekolah 
-                   LEFT JOIN master_ajaran ON master_ajaran.id=master_rombel.tahun_ajaran 
-                   WHERE master_ajaran.`status`='Y'";
+        $query = "SELECT master_santri.id, master_santri.induk, CONCAT(master_sekolah.sekolah,' ',kelas,' ',rombel) AS kelas, master_santri.* FROM master_rombel_siswa RIGHT JOIN master_santri ON master_rombel_siswa.id_santri=master_santri.id LEFT JOIN master_rombel ON master_rombel.id=master_rombel_siswa.id_rombel LEFT JOIN master_kelas ON master_kelas.id=master_rombel.id_kelas LEFT JOIN master_sekolah ON master_sekolah.id=master_kelas.id_sekolah LEFT JOIN master_ajaran ON master_ajaran.id=master_rombel.tahun_ajaran WHERE master_ajaran.`status`='Y' ORDER BY master_sekolah.sekolah ASC,kelas ASC,rombel ASC,nama ASC";
 
         $santriData = DB::connection('source')->select($query);
 
@@ -215,6 +208,11 @@ class SimpleSantriImportCommand extends Command
                 'nama_ibu_kandung' => ! empty($santri['nama_ibu']) ? $santri['nama_ibu'] : null,
                 'no_whatsapp' => null,
                 'alamat_ktp_id' => $alamatId,
+                'custom_attribute' => [
+                    'id' => $santri['id'] ?? null,
+                    'induk' => $santri['induk'] ?? null,
+                    'kelas' => $santri['kelas'] ?? null,
+                ],
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
