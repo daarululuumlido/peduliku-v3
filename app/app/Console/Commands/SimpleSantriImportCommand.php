@@ -243,6 +243,7 @@ $this->info('');
                 'nama_ibu_kandung' => null,
                 'no_whatsapp' => ! empty($santri['nomor_ayah']) ? $santri['nomor_ayah'] : null,
                 'alamat_ktp_id' => $alamatId,
+                'custom_attribute' => null,
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
@@ -273,6 +274,7 @@ $this->info('');
                 'nama_ibu_kandung' => null,
                 'no_whatsapp' => ! empty($santri['nomor_ibu']) ? $santri['nomor_ibu'] : null,
                 'alamat_ktp_id' => $alamatId,
+                'custom_attribute' => null,
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
