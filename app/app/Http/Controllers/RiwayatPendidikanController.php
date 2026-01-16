@@ -14,7 +14,7 @@ class RiwayatPendidikanController extends Controller
      */
     public function index(Request $request, PeranPegawai $pegawai)
     {
-        $pendidikan = $pegawai->riwayatPendidikan()
+        $pendidikan = $pegawai->orang->riwayatPendidikan()
             ->orderBy('tahun_masuk', 'desc')
             ->get();
 
@@ -27,20 +27,19 @@ class RiwayatPendidikanController extends Controller
     public function store(Request $request, PeranPegawai $pegawai)
     {
         $validated = $request->validate([
-            'jenjang_pendidikan' => 'required|in:SD,SMP,SMA,D3,S1,S2,S3,Lainnya',
-            'nama_institusi' => 'required|string|max:255',
+            'jenjang' => 'required|in:SD,SMP,SMA,D3,S1,S2,S3,Lainnya',
+            'institusi' => 'required|string|max:255',
             'jurusan' => 'nullable|string|max:255',
             'tahun_masuk' => 'required|integer|min:1900|max:' . (date('Y') + 10),
             'tahun_lulus' => 'nullable|integer|min:1900|max:' . (date('Y') + 10),
-            'ipk' => 'nullable|numeric|min:0|max:4.00',
-            'gelar_akademik' => 'nullable|string|max:255',
+            'nilai_akhir' => 'nullable|numeric|min:0|max:100.00',
             'no_ijazah' => 'nullable|string|max:255',
         ]);
 
         DB::beginTransaction();
 
         try {
-            $pegawai->riwayatPendidikan()->create($validated);
+            $pegawai->orang->riwayatPendidikan()->create($validated);
 
             DB::commit();
 
@@ -60,13 +59,12 @@ class RiwayatPendidikanController extends Controller
     public function update(Request $request, PeranPegawai $pegawai, RiwayatPendidikan $riwayatPendidikan)
     {
         $validated = $request->validate([
-            'jenjang_pendidikan' => 'required|in:SD,SMP,SMA,D3,S1,S2,S3,Lainnya',
-            'nama_institusi' => 'required|string|max:255',
+            'jenjang' => 'required|in:SD,SMP,SMA,D3,S1,S2,S3,Lainnya',
+            'institusi' => 'required|string|max:255',
             'jurusan' => 'nullable|string|max:255',
             'tahun_masuk' => 'required|integer|min:1900|max:' . (date('Y') + 10),
             'tahun_lulus' => 'nullable|integer|min:1900|max:' . (date('Y') + 10),
-            'ipk' => 'nullable|numeric|min:0|max:4.00',
-            'gelar_akademik' => 'nullable|string|max:255',
+            'nilai_akhir' => 'nullable|numeric|min:0|max:100.00',
             'no_ijazah' => 'nullable|string|max:255',
         ]);
 
