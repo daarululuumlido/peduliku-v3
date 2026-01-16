@@ -84,6 +84,7 @@ class OrangController extends Controller
             'kartu_keluarga_id' => ['nullable', 'exists:kartu_keluarga,id'],
             'status_hubungan' => ['nullable', 'in:'.implode(',', array_keys(\App\Models\KartuKeluargaAnggota::getStatusHubunganOptions()))],
             'new_no_kk' => ['nullable', 'string', 'size:16', 'unique:kartu_keluarga,no_kk'],
+            'custom_attribute' => ['nullable', 'array'],
             'dokumen.*' => ['nullable', 'file', 'max:10240'], // Max 10MB per file
         ]);
 
@@ -119,6 +120,7 @@ class OrangController extends Controller
             'nama_ibu_kandung' => $validated['nama_ibu_kandung'] ?? null,
             'no_whatsapp' => $validated['no_whatsapp'] ?? null,
             'alamat_ktp_id' => $alamatId,
+            'custom_attribute' => $validated['custom_attribute'] ?? null,
         ]);
 
         // Handle Kartu Keluarga relationship if provided
@@ -184,6 +186,7 @@ class OrangController extends Controller
             'kartu_keluarga_id' => ['nullable', 'exists:kartu_keluarga,id'],
             'status_hubungan' => ['nullable', 'in:'.implode(',', array_keys(\App\Models\KartuKeluargaAnggota::getStatusHubunganOptions()))],
             'new_no_kk' => ['nullable', 'string', 'size:16', 'unique:kartu_keluarga,no_kk'],
+            'custom_attribute' => ['nullable', 'array'],
             'dokumen.*' => ['nullable', 'file', 'max:10240'], // Max 10MB per file
         ]);
 
@@ -236,6 +239,7 @@ class OrangController extends Controller
             'nama_ibu_kandung' => $validated['nama_ibu_kandung'] ?? null,
             'no_whatsapp' => $validated['no_whatsapp'] ?? null,
             'alamat_ktp_id' => $orang->alamat_ktp_id,
+            'custom_attribute' => $validated['custom_attribute'] ?? null,
         ]);
 
         // Handle document uploads
