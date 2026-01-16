@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\StrukturOrganisasiController;
 use App\Http\Controllers\UnitOrganisasiController;
+use App\Http\Controllers\PeranPegawaiController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -29,5 +30,17 @@ Route::prefix('hris')->name('hris.')->middleware(['auth'])->group(function () {
         Route::put('/{unitOrganisasi}', [UnitOrganisasiController::class, 'update'])->name('update');
         Route::delete('/{unitOrganisasi}', [UnitOrganisasiController::class, 'destroy'])->name('destroy');
         Route::post('/reorder', [UnitOrganisasiController::class, 'reorder'])->name('reorder');
+    });
+
+    // Peran Pegawai Routes
+    Route::prefix('pegawai')->name('pegawai.')->group(function () {
+        Route::get('/', [PeranPegawaiController::class, 'index'])->name('index');
+        Route::post('/', [PeranPegawaiController::class, 'store'])->name('store');
+        Route::get('/search-orang', [PeranPegawaiController::class, 'searchOrang'])->name('search-orang');
+        Route::get('/{peranPegawai}', [PeranPegawaiController::class, 'show'])->name('show');
+        Route::get('/{peranPegawai}/current-jabatan', [PeranPegawaiController::class, 'currentJabatan'])->name('current-jabatan');
+        Route::put('/{peranPegawai}', [PeranPegawaiController::class, 'update'])->name('update');
+        Route::delete('/{peranPegawai}', [PeranPegawaiController::class, 'destroy'])->name('destroy');
+        Route::post('/{peranPegawai}/assign-jabatan', [PeranPegawaiController::class, 'assignJabatan'])->name('assign-jabatan');
     });
 });
