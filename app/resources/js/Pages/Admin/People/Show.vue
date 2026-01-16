@@ -177,6 +177,21 @@ const formatStatusHubungan = (status) => {
                             </div>
                         </div>
 
+                        <!-- Custom Attributes -->
+                        <div class="mt-8" v-if="orang.custom_attribute && Object.keys(orang.custom_attribute).length > 0">
+                            <h4 class="font-semibold text-gray-900 border-b pb-2 mb-4 dark:text-white dark:border-slate-700">Atribut Kustom</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div
+                                    v-for="(value, key) in orang.custom_attribute"
+                                    :key="key"
+                                    class="p-3 bg-gray-50 rounded-lg dark:bg-slate-900"
+                                >
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">{{ key }}</p>
+                                    <p class="text-gray-900 dark:text-white font-medium">{{ value || '-' }}</p>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Documents -->
                         <div class="mt-8" v-if="orang.dokumen && orang.dokumen.length > 0">
                             <h4 class="font-semibold text-gray-900 border-b pb-2 mb-4">Dokumen</h4>

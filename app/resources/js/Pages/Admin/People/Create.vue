@@ -3,6 +3,7 @@ import ModuleLayout from '@/Layouts/ModuleLayout.vue';
 import AddressSelector from '@/Components/AddressSelector.vue';
 import AddressSearchSelect from '@/Components/AddressSearchSelect.vue';
 import KKSearchSelect from '@/Components/KKSearchSelect.vue';
+import KeyValueInput from '@/Components/KeyValueInput.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
@@ -22,6 +23,7 @@ const form = useForm({
     alamat_id: '',
     kartu_keluarga_id: '',
     new_no_kk: '',
+    custom_attribute: {},
     dokumen: [],
 });
 
@@ -270,6 +272,16 @@ const submit = () => {
                                     :error="form.errors.desa_id"
                                 />
                             </div>
+                        </div>
+
+                        <!-- Custom Attributes -->
+                        <div class="border-t pt-6">
+                            <h3 class="text-lg font-medium text-gray-900 mb-4">Atribut Kustom</h3>
+                            <KeyValueInput
+                                v-model="form.custom_attribute"
+                                :error="form.errors.custom_attribute"
+                                label="Atribut Kustom"
+                            />
                         </div>
 
                         <!-- Dokumen Upload -->
