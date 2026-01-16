@@ -17,7 +17,7 @@ class PeranPegawaiController extends Controller
      */
     public function index(Request $request)
     {
-        $pegawai = PeranPegawai::with(['orang', 'historiJabatan.masterJabatan.unitOrganisasi'])
+        $pegawai = PeranPegawai::with(['orang', 'currentJabatan.masterJabatan.unitOrganisasi'])
             ->when($request->query('status'), function ($query, $status) {
                 $query->where('status_kepegawaian', $status);
             })
@@ -26,11 +26,13 @@ class PeranPegawaiController extends Controller
                     $q->where('nama', 'like', "%{$search}%")
                         ->orWhere('nik', 'like', "%{$search}%");
                 });
+                $query->orWhere('nip', 'like', "%{$search}%");
             })
+            ->where('is_active', true)
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 
-        return inertia('PeranPegawai/Index', [
+        return inertia('Hris/Pegawai/Index', [
             'pegawai' => $pegawai,
             'filters' => $request->only(['status', 'search']),
         ]);
@@ -103,14 +105,9 @@ class PeranPegawaiController extends Controller
             'historiJabatan' => function ($query) {
                 $query->with(['masterJabatan.unitOrganisasi'])->orderBy('tgl_mulai', 'desc');
             },
-            'riwayatPendidikan',
-            'riwayatKeluarga',
-            'riwayatIbadah',
-            'catatanKepegawaian',
-            'checklistDokumen.masterDokumenWajib',
         ]);
 
-        return inertia('PeranPegawai/Show', [
+        return inertia('Hris/Pegawai/Show', [
             'pegawai' => $peranPegawai,
         ]);
     }

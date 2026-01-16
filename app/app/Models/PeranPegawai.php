@@ -58,6 +58,11 @@ class PeranPegawai extends Model
         return $this->hasMany(HistoriJabatanPegawai::class, 'peran_pegawai_id');
     }
 
+    public function currentJabatan(): HasMany
+    {
+        return $this->historiJabatan()->whereNull('tgl_selesai')->latest();
+    }
+
     public function riwayatKeluarga(): HasMany
     {
         return $this->hasMany(RiwayatKeluargaPegawai::class, 'peran_pegawai_id');
@@ -76,6 +81,11 @@ class PeranPegawai extends Model
     public function checklistDokumen(): HasMany
     {
         return $this->hasMany(ChecklistDokumenPegawai::class, 'peran_pegawai_id');
+    }
+
+    public function riwayatPendidikan(): HasMany
+    {
+        return $this->hasMany(RiwayatPendidikan::class, 'peran_pegawai_id');
     }
 
     public function scopeActive($query)

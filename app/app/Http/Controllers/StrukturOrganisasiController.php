@@ -11,14 +11,21 @@ class StrukturOrganisasiController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $struktur = StrukturOrganisasi::withCount('unitOrganisasi')
+        $strukturs = StrukturOrganisasi::withCount('unitOrganisasi as units_count')
+            ->when($request->query('search'), function ($query, $search) {
+                $query->where('nama_periode', 'like', "%{$search}%");
+            })
+            ->when($request->query('status'), function ($query, $status) {
+                $query->where('is_active', $status === '1');
+            })
             ->orderBy('tgl_mulai', 'desc')
-            ->get();
+            ->paginate(20);
 
-        return inertia('StrukturOrganisasi/Index', [
-            'struktur' => $struktur,
+        return inertia('Hris/StrukturOrganisasi/Index', [
+            'strukturs' => $strukturs,
+            'filters' => $request->only(['search', 'status']),
         ]);
     }
 
@@ -62,11 +69,29 @@ class StrukturOrganisasiController extends Controller
     public function show(StrukturOrganisasi $strukturOrganisasi)
     {
         $strukturOrganisasi->load(['unitOrganisasi' => function ($query) {
-            $query->with('parent')->orderBy('level_hierarki')->orderBy('urutan');
+            $query->withCount('masterJabatan as jabatan_count')
+                ->with(['parent', 'children' => function ($q) {
+                    $q->withCount('masterJabatan as jabatan_count');
+                }])
+                ->orderBy('level_hierarki')
+                ->orderBy('urutan');
         }]);
 
-        return inertia('StrukturOrganisasi/Show', [
+        // Count total pegawai in this structure
+        $pegawaiCount = DB::table('peran_pegawai')
+            ->join('histori_jabatan_pegawai', 'peran_pegawai.id', '=', 'histori_jabatan_pegawai.peran_pegawai_id')
+            ->join('master_jabatan', 'histori_jabatan_pegawai.master_jabatan_id', '=', 'master_jabatan.id')
+            ->join('unit_organisasi', 'master_jabatan.unit_organisasi_id', '=', 'unit_organisasi.id')
+            ->where('unit_organisasi.struktur_id', $strukturOrganisasi->id)
+            ->where('peran_pegawai.is_active', true)
+            ->whereNull('histori_jabatan_pegawai.tgl_selesai')
+            ->count();
+
+        $strukturOrganisasi->pegawai_count = $pegawaiCount;
+
+        return inertia('Hris/StrukturOrganisasi/Show', [
             'struktur' => $strukturOrganisasi,
+            'units' => $strukturOrganisasi->unitOrganisasi,
         ]);
     }
 
