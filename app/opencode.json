@@ -1,32 +1,23 @@
 {
     "mcp": {
-        "mysql": {
-            "type": "remote",
-            "url": "http://127.0.1.1:3003/mcp",
+        "laravel-boost": {
+            "type": "local",
             "enabled": true,
-            "headers": {
-                "Authorization": "Bearer 45fdtgdfgsdfgsdfg"
-            }
+            "command": [
+                "php",
+                "artisan",
+                "boost:mcp"
+            ]
         },
-        "web-search-prime": {
-            "type": "remote",
-            "url": "https://api.z.ai/api/mcp/web_search_prime/mcp",
-            "headers": {
-                "Authorization": "Bearer 2c97a0adbce04dbebb51afdf44d43f17.O71AUF1ZGCMJ97zD"
-            }
-        },
-        "web-reader": {
-            "type": "remote",
-            "url": "https://api.z.ai/api/mcp/web_reader/mcp",
-            "headers": {
-                "Authorization": "Bearer 2c97a0adbce04dbebb51afdf44d43f17.O71AUF1ZGCMJ97zD"
-            }
-        },
-        "zread": {
-            "type": "remote",
-            "url": "https://api.z.ai/api/mcp/zread/mcp",
-            "headers": {
-                "Authorization": "Bearer 2c97a0adbce04dbebb51afdf44d43f17"
+        "herd": {
+            "type": "local",
+            "enabled": true,
+            "command": [
+                "php",
+                "C:/Users/HasanBasri/.config/herd/bin/herd-mcp.phar"
+            ],
+            "environment": {
+                "SITE_PATH": "E:\\Projects\\PHP\\peduliku-v3\\app"
             }
         }
     },
