@@ -20,6 +20,7 @@ Route::prefix('hris')->name('hris.')->middleware(['auth'])->group(function () {
     // Struktur Organisasi Routes
     Route::prefix('struktur-organisasi')->name('struktur-organisasi.')->group(function () {
         Route::get('/', [StrukturOrganisasiController::class, 'index'])->name('index');
+        Route::get('/create', [StrukturOrganisasiController::class, 'create'])->name('create');
         Route::post('/', [StrukturOrganisasiController::class, 'store'])->name('store');
         Route::get('/{strukturOrganisasi}', [StrukturOrganisasiController::class, 'show'])->name('show');
         Route::get('/{strukturOrganisasi}/edit', [StrukturOrganisasiController::class, 'edit'])->name('edit');

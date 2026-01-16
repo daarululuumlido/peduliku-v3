@@ -81,9 +81,35 @@ return [
         ],
     ],
 
+    'hris' => [
+        'name' => 'HRIS',
+        'icon' => 'briefcase',
+        'route' => 'hris.struktur-organisasi.index',
+        'permission' => null, // Visible to authenticated users
+        'menu' => [
+            [
+                'label' => 'Struktur Organisasi',
+                'route' => 'hris.struktur-organisasi.index',
+                'icon' => 'home',
+                'permission' => 'hris.struktur_organisasi.view',
+            ],
+            [
+                'label' => 'Unit Organisasi',
+                'route' => 'hris.unit-organisasi.index',
+                'icon' => 'cog',
+                'permission' => 'hris.unit_organisasi.view',
+            ],
+            [
+                'label' => 'Pegawai',
+                'route' => 'hris.pegawai.index',
+                'icon' => 'users',
+                'permission' => 'hris.pegawai.view',
+            ],
+        ],
+    ],
+
     // Future modules can be added here:
     // 'akademik' => [...],
     // 'keuangan' => [...],
-    // 'kepegawaian' => [...],
 
 ];

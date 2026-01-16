@@ -91,7 +91,9 @@ class StrukturOrganisasiController extends Controller
 
         return inertia('Hris/StrukturOrganisasi/Show', [
             'struktur' => $strukturOrganisasi,
-            'units' => $strukturOrganisasi->unitOrganisasi,
+            'units' => $strukturOrganisasi->unitOrganisasi->map(function ($unit) {
+                return $unit->toArray();
+            }),
         ]);
     }
 
