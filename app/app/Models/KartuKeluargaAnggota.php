@@ -20,6 +20,8 @@ class KartuKeluargaAnggota extends Model implements AuditableContract
         'status_hubungan',
     ];
 
+    protected $appends = ['status_hubungan_label'];
+
     /**
      * Get the family card for this membership.
      */
