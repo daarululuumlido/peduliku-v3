@@ -14,6 +14,8 @@ class UnitOrganisasiController extends Controller
      */
     public function index(Request $request)
     {
+        $this->authorize('hris.unit_organisasi.view');
+
         $strukturId = $request->query('struktur_id');
         
         // Get all units with their relationships
@@ -44,6 +46,8 @@ class UnitOrganisasiController extends Controller
      */
     public function create()
     {
+        $this->authorize('hris.unit_organisasi.create');
+
         $struktur = StrukturOrganisasi::all();
         $units = UnitOrganisasi::orderBy('nama_unit')->get();
 
@@ -58,6 +62,8 @@ class UnitOrganisasiController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('hris.unit_organisasi.create');
+
         $validated = $request->validate([
             'struktur_id' => 'required|exists:struktur_organisasi,id',
             'parent_id' => 'nullable|exists:unit_organisasi,id',
@@ -109,7 +115,16 @@ class UnitOrganisasiController extends Controller
      */
     public function show(UnitOrganisasi $unitOrganisasi)
     {
-        $unitOrganisasi->load(['parent', 'children', 'struktur', 'masterJabatan']);
+        $this->authorize('hris.unit_organisasi.view');
+
+        $unitOrganisasi->load([
+            'parent',
+            'children',
+            'struktur',
+            'masterJabatan.historiJabatan' => function ($query) {
+                $query->aktif()->with('peranPegawai.orang');
+            }
+        ]);
 
         return inertia('Hris/UnitOrganisasi/Show', [
             'unit' => $unitOrganisasi,
@@ -121,6 +136,8 @@ class UnitOrganisasiController extends Controller
      */
     public function edit(UnitOrganisasi $unitOrganisasi)
     {
+        $this->authorize('hris.unit_organisasi.edit');
+
         $units = UnitOrganisasi::where('struktur_id', $unitOrganisasi->struktur_id)
             ->where('id', '!=', $unitOrganisasi->id)
             ->orderBy('nama_unit')
@@ -137,6 +154,8 @@ class UnitOrganisasiController extends Controller
      */
     public function update(Request $request, UnitOrganisasi $unitOrganisasi)
     {
+        $this->authorize('hris.unit_organisasi.edit');
+
         $validated = $request->validate([
             'parent_id' => 'nullable|exists:unit_organisasi,id',
             'nama_unit' => 'required|string|max:255',
@@ -183,6 +202,8 @@ class UnitOrganisasiController extends Controller
      */
     public function destroy(UnitOrganisasi $unitOrganisasi)
     {
+        $this->authorize('hris.unit_organisasi.delete');
+
         DB::beginTransaction();
 
         try {
@@ -215,6 +236,8 @@ class UnitOrganisasiController extends Controller
      */
     public function reorder(Request $request)
     {
+        $this->authorize('hris.unit_organisasi.reorder');
+
         $validated = $request->validate([
             'units' => 'required|array',
             'units.*.id' => 'required|exists:unit_organisasi,id',

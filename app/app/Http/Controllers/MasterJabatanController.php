@@ -14,6 +14,8 @@ class MasterJabatanController extends Controller
      */
     public function create(UnitOrganisasi $unitOrganisasi)
     {
+        $this->authorize('hris.jabatan.create');
+
         return inertia('Hris/MasterJabatan/Create', [
             'unit' => $unitOrganisasi,
         ]);
@@ -24,6 +26,8 @@ class MasterJabatanController extends Controller
      */
     public function store(Request $request, UnitOrganisasi $unitOrganisasi)
     {
+        $this->authorize('hris.jabatan.create');
+
         $validated = $request->validate([
             'nama_jabatan' => 'required|string|max:255',
             'is_pimpinan' => 'boolean',
@@ -53,6 +57,8 @@ class MasterJabatanController extends Controller
      */
     public function edit(UnitOrganisasi $unitOrganisasi, MasterJabatan $masterJabatan)
     {
+        $this->authorize('hris.jabatan.edit');
+
         return inertia('Hris/MasterJabatan/Edit', [
             'unit' => $unitOrganisasi,
             'jabatan' => $masterJabatan,
@@ -64,6 +70,8 @@ class MasterJabatanController extends Controller
      */
     public function update(Request $request, UnitOrganisasi $unitOrganisasi, MasterJabatan $masterJabatan)
     {
+        $this->authorize('hris.jabatan.edit');
+
         $validated = $request->validate([
             'nama_jabatan' => 'required|string|max:255',
             'is_pimpinan' => 'boolean',
@@ -93,6 +101,8 @@ class MasterJabatanController extends Controller
      */
     public function destroy(UnitOrganisasi $unitOrganisasi, MasterJabatan $masterJabatan)
     {
+        $this->authorize('hris.jabatan.delete');
+
         DB::beginTransaction();
 
         try {
@@ -112,6 +122,69 @@ class MasterJabatanController extends Controller
 
             return redirect()->back()
                 ->with('error', 'Gagal menghapus jabatan: '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Assign pegawai to jabatan.
+     */
+    public function assignPegawai(Request $request, UnitOrganisasi $unitOrganisasi, MasterJabatan $masterJabatan)
+    {
+        $this->authorize('hris.jabatan.edit');
+
+        $validated = $request->validate([
+            'peran_pegawai_id' => 'required|exists:peran_pegawai,id',
+            'tgl_mulai' => 'required|date',
+            'no_sk' => 'nullable|string',
+            'spesialisasi' => 'nullable|string',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            // Check current active assignments for this person (optional rule: one primary job?)
+            // For now we allow multiple, but usually we end the previous one.
+            // Let's assume standard logic: simply create the record.
+
+            $unitOrganisasi->masterJabatan()->find($masterJabatan->id)->historiJabatan()->create([
+                'peran_pegawai_id' => $validated['peran_pegawai_id'],
+                'tgl_mulai' => $validated['tgl_mulai'],
+                'no_sk' => $validated['no_sk'],
+                'spesialisasi' => $validated['spesialisasi'],
+            ]);
+
+            DB::commit();
+
+            return redirect()->back()->with('success', 'Pegawai berhasil ditugaskan ke jabatan ini.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Gagal menugaskan pegawai: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Unassign pegawai from jabatan.
+     */
+    public function unassignPegawai(Request $request, UnitOrganisasi $unitOrganisasi, MasterJabatan $masterJabatan, $historiId)
+    {
+        $this->authorize('hris.jabatan.edit');
+
+        DB::beginTransaction();
+
+        try {
+            $history = $masterJabatan->historiJabatan()->findOrFail($historiId);
+            
+            $history->update([
+                'tgl_selesai' => now(),
+                'keterangan_mutasi' => 'Diberhentikan dari jabatan',
+            ]);
+
+            DB::commit();
+
+            return redirect()->back()->with('success', 'Pegawai berhasil diberhentikan dari jabatan ini.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Gagal memberhentikan pegawai: ' . $e->getMessage());
         }
     }
 }

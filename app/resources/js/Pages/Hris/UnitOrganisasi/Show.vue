@@ -1,11 +1,30 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import ModuleLayout from '@/Layouts/ModuleLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
+import JabatanModal from './Partials/JabatanModal.vue';
 
 const props = defineProps({
     unit: Object,
 });
+
+const isJabatanModalOpen = ref(false);
+const selectedJabatanId = ref(null);
+
+const selectedJabatan = computed(() => {
+    if (!selectedJabatanId.value || !props.unit.master_jabatan) return null;
+    return props.unit.master_jabatan.find(j => j.id === selectedJabatanId.value);
+});
+
+const openEditJabatan = (jabatan) => {
+    selectedJabatanId.value = jabatan.id;
+    isJabatanModalOpen.value = true;
+};
+
+const closeJabatanModal = () => {
+    isJabatanModalOpen.value = false;
+    selectedJabatanId.value = null;
+};
 </script>
 
 <template>
@@ -17,12 +36,14 @@ const props = defineProps({
                 <h2 class="font-semibold text-xl text-gray-800 dark:text-white leading-tight">
                     Unit Organisasi
                 </h2>
-                <Link
-                    :href="route('hris.struktur-organisasi.show', unit.struktur_id)"
-                    class="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
-                >
-                    ← Kembali ke Struktur
-                </Link>
+                <div class="flex items-center gap-3">
+                    <Link
+                        :href="route('hris.struktur-organisasi.show', unit.struktur_id)"
+                        class="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
+                    >
+                        ← Kembali ke Struktur
+                    </Link>
+                </div>
             </div>
         </template>
 
@@ -43,6 +64,23 @@ const props = defineProps({
                                 <span v-if="unit.parent">Parent: {{ unit.parent.nama_unit }}</span>
                                 <span v-if="unit.struktur">Periode: {{ unit.struktur.nama_periode }}</span>
                             </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <Link
+                                :href="route('hris.unit-organisasi.edit', unit.id)"
+                                class="px-3 py-1.5 bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-semibold rounded-md transition-colors"
+                            >
+                                Edit
+                            </Link>
+                            <Link
+                                :href="route('hris.unit-organisasi.destroy', unit.id)"
+                                method="delete"
+                                as="button"
+                                class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-md transition-colors"
+                                onclick="return confirm('Apakah Anda yakin ingin menghapus unit ini?')"
+                            >
+                                Hapus
+                            </Link>
                         </div>
                     </div>
                 </div>
@@ -109,24 +147,39 @@ const props = defineProps({
                                         Pimpinan
                                     </span>
                                     <span v-if="jabatan.kuota_sdm">Kuota: {{ jabatan.kuota_sdm }}</span>
+                                    <span v-if="jabatan.histori_jabatan?.length > 0" class="text-indigo-600 dark:text-indigo-400">
+                                        Terisi: {{ jabatan.histori_jabatan.length }}
+                                    </span>
                                     <span v-if="jabatan.keterangan">{{ jabatan.keterangan }}</span>
+                                </div>
+                                <div class="mt-2" v-if="jabatan.histori_jabatan && jabatan.histori_jabatan.length > 0">
+                                    <div class="flex -space-x-2 overflow-hidden">
+                                        <div 
+                                            v-for="history in jabatan.histori_jabatan.slice(0, 5)" 
+                                            :key="history.id"
+                                            class="inline-block h-6 w-6 rounded-full bg-gray-200 ring-2 ring-white dark:ring-slate-800 flex items-center justify-center text-xs font-bold text-gray-600"
+                                            :title="history.peran_pegawai?.orang?.nama"
+                                        >
+                                            {{ history.peran_pegawai?.orang?.nama?.charAt(0) }}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="flex items-center gap-2">
-                                <Link
-                                    :href="route('hris.unit-organisasi.master-jabatan.edit', [unit.id, jabatan.id])"
+                                <button
+                                    @click="openEditJabatan(jabatan)"
                                     class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 text-xs"
                                 >
-                                    Edit
-                                </Link>
-                                <Link
+                                    Detail & Edit
+                                </button>
+                                <!-- <Link
                                     :href="route('hris.unit-organisasi.master-jabatan.destroy', [unit.id, jabatan.id])"
                                     method="delete"
                                     as="button"
                                     class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 text-xs"
                                 >
                                     Hapus
-                                </Link>
+                                </Link> -->
                             </div>
                         </div>
                     </div>
@@ -172,5 +225,12 @@ const props = defineProps({
                 </div>
             </div>
         </div>
+
+        <JabatanModal
+            :show="isJabatanModalOpen"
+            :jabatan="selectedJabatan"
+            :unitId="unit.id"
+            @close="closeJabatanModal"
+        />
     </ModuleLayout>
 </template>

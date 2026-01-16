@@ -33,11 +33,23 @@ Route::prefix('hris')->name('hris.')->middleware(['auth'])->group(function () {
     Route::prefix('unit-organisasi')->name('unit-organisasi.')->group(function () {
         Route::get('/', [UnitOrganisasiController::class, 'index'])->name('index');
         Route::post('/', [UnitOrganisasiController::class, 'store'])->name('store');
+        Route::get('/create', [UnitOrganisasiController::class, 'create'])->name('create');
         Route::get('/{unitOrganisasi}', [UnitOrganisasiController::class, 'show'])->name('show');
         Route::get('/{unitOrganisasi}/edit', [UnitOrganisasiController::class, 'edit'])->name('edit');
         Route::put('/{unitOrganisasi}', [UnitOrganisasiController::class, 'update'])->name('update');
         Route::delete('/{unitOrganisasi}', [UnitOrganisasiController::class, 'destroy'])->name('destroy');
         Route::post('/reorder', [UnitOrganisasiController::class, 'reorder'])->name('reorder');
+
+        // Master Jabatan Routes (Nested)
+        Route::prefix('{unitOrganisasi}/master-jabatan')->name('master-jabatan.')->group(function () {
+            Route::get('/create', [App\Http\Controllers\MasterJabatanController::class, 'create'])->name('create');
+            Route::post('/', [App\Http\Controllers\MasterJabatanController::class, 'store'])->name('store');
+            Route::get('/{masterJabatan}/edit', [App\Http\Controllers\MasterJabatanController::class, 'edit'])->name('edit');
+            Route::put('/{masterJabatan}', [App\Http\Controllers\MasterJabatanController::class, 'update'])->name('update');
+            Route::delete('/{masterJabatan}', [App\Http\Controllers\MasterJabatanController::class, 'destroy'])->name('destroy');
+            Route::post('/{masterJabatan}/assign', [App\Http\Controllers\MasterJabatanController::class, 'assignPegawai'])->name('assign');
+            Route::post('/{masterJabatan}/unassign/{historiId}', [App\Http\Controllers\MasterJabatanController::class, 'unassignPegawai'])->name('unassign');
+        });
     });
 
     // Peran Pegawai Routes
@@ -46,6 +58,7 @@ Route::prefix('hris')->name('hris.')->middleware(['auth'])->group(function () {
         Route::get('/create', [PeranPegawaiController::class, 'create'])->name('create');
         Route::post('/', [PeranPegawaiController::class, 'store'])->name('store');
         Route::get('/search-orang', [PeranPegawaiController::class, 'searchOrang'])->name('search-orang');
+        Route::get('/search-active', [PeranPegawaiController::class, 'searchPegawai'])->name('search-active');
         Route::get('/{peranPegawai}', [PeranPegawaiController::class, 'show'])->name('show');
         Route::get('/{peranPegawai}/edit', [PeranPegawaiController::class, 'edit'])->name('edit');
         Route::get('/{peranPegawai}/current-jabatan', [PeranPegawaiController::class, 'currentJabatan'])->name('current-jabatan');
