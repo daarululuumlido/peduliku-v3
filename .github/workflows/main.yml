@@ -1,0 +1,52 @@
+name: 🚀 Deploy on push main
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'app/**'
+      - '.github/workflows/main.yml'
+
+jobs:
+  web-deploy:
+    name: 🎉 Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🚚 Get latest code
+        uses: actions/checkout@v2
+
+      - name: 📂 Deploy to server via ssh
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST  }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            cd /www/wwwroot/peduliku-v3.daarululuumlido.com
+            git config --global --add safe.directory /www/wwwroot/peduliku-v3.daarululuumlido.com
+            echo "Deployment started ..."
+            git reset --hard
+            git pull --rebase
+            cd app
+            composer update --no-dev
+            php artisan optimize
+            sudo chmod -R 777 storage/*
+            for item in *; do
+              if [[ "$item" != "public/.user.ini" && "$item" != "public" ]]; then
+                sudo chown -R www:www "$item"
+              fi
+            done
+            php artisan horizon:terminate
+            php artisan octane:stop
+
+      - name: Send message to Telegram
+        uses: Lukasss93/telegram-action@v2
+        if: always()
+        env:
+          TELEGRAM_TOKEN: '${{ secrets.TELEGRAM_TOKEN }}'
+          TELEGRAM_CHAT: '${{ secrets.TELEGRAM_CHAT }}'
+        with:
+          status: '${{job.status}}'
