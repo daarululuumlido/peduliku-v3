@@ -1,3 +1,14 @@
+# Fitur yang dikembangkan
+- Data Pokok
+- Kepegawaian
+- Keuangan
+- Pendidikan
+- Utilitas
+
+# Referensi
+> [![Static Badge](https://img.shields.io/badge/Peta%20Pikiran-800000?style=for-the-badge)](https://whimsical.com/peduliku-mind-map-RpiJfTWgR56pSQz8sabruF) <br>
+> [![Static Badge](https://img.shields.io/badge/PROTOTYPE-9001FD?style=for-the-badge)](https://peduliku-prototype.daarululuumlido.com/) <br>
+
 # Website
 
 This website is built using [Docusaurus](https://docusaurus.io/), a modern static website generator.
