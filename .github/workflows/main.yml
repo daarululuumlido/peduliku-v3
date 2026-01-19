@@ -33,6 +33,8 @@ jobs:
             cd app
             composer update --no-dev
             php artisan optimize
+            npm i
+            npm run build
             sudo chmod -R 777 storage/*
             for item in *; do
               if [[ "$item" != "public/.user.ini" && "$item" != "public" ]]; then
