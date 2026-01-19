@@ -7,8 +7,7 @@
 
 # Referensi
 > [![Static Badge](https://img.shields.io/badge/Peta%20Pikiran-800000?style=for-the-badge)](https://whimsical.com/peduliku-mind-map-RpiJfTWgR56pSQz8sabruF) <br>
-> [![Static Badge](https://img.shields.io/badge/Sketsa-00008B?style=for-the-badge)](https://docs.google.com/spreadsheets/d/1CvszIz0KoI9BfjlxGDcaFWlYFJRPgfGB_AGN9k2RC1k/edit?gid=1881290113#gid=1881290113&range=A1) <br>
-> [![Static Badge](https://img.shields.io/badge/PROTOTYPE-9001FD?style=for-the-badge)](https://github.com/daarululuumlido/peduliku-prototype) <br
+> [![Static Badge](https://img.shields.io/badge/PROTOTYPE-9001FD?style=for-the-badge)](https://peduliku-prototype.daarululuumlido.com/) <br>
 
 # Website
 
